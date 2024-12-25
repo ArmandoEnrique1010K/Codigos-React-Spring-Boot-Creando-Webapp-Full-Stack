@@ -1,11 +1,11 @@
 
-export const TotalView = ( { total }) => {
+export const TotalView = ({ total }) => {
 
     return (
         <>
             <div className="text-end">
-                <span className="badge bg-success">{ total }</span>
-        </div>
+                <span className="badge bg-success">{total}</span>
+            </div>
         </>
     )
 }

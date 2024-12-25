@@ -1,1 +1,1 @@
-export const Book = ({book}) => (<div>{book}</div>);
+export const Book = ({ book }) => (<div>{book}</div>);

@@ -1,11 +1,11 @@
 import { RowItemView } from "./RowItemView"
 import PropTypes from 'prop-types';
 
-export const ListItemsView = ({title, items, handlerDeleteItem}) => {
+export const ListItemsView = ({ title, items, handlerDeleteItem }) => {
 
     return (
         <>
-            <h4>{ title }</h4>
+            <h4>{title}</h4>
             <table className="table table-striped table-hover">
                 <thead>
                     <tr>

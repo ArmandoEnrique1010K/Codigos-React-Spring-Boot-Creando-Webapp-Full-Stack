@@ -1,19 +1,18 @@
-
 import PropTypes from 'prop-types';
 import { Book } from './components/Book';
 import { Title } from './components/Title';
 import { UserDetails } from './components/UserDetails';
 
-export const HelloWorldApp = ({ user, id, title, book}) => {
-    
+export const HelloWorldApp = ({ user, id, title, book }) => {
+
     console.log(title)
     // const name = 'Pepe';
 
     return (
         <>
-            <Title title={ title } />
-            <UserDetails user={user} id={ id } />
-            <Book book={ book } />
+            <Title title={title} />
+            <UserDetails user={user} id={id} />
+            <Book book={book} />
         </>
     );
 }

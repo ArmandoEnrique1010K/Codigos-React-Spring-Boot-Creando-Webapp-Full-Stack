@@ -1,10 +1,8 @@
-
-
 const average = 5.9;
 
-let status2 = '';
+let status2 = "";
 
-status2 = (average >= 5.5) ? 'Aprobado' : 'Rechazado';
+status2 = average >= 5.5 ? "Aprobado" : "Rechazado";
 
 // if (average >= 5.5) {
 //     status2 = 'Aprovado';
@@ -22,4 +20,4 @@ const c = 12;
 max = a > b ? a : b;
 max = max > c ? max : c;
 
-console.log(`El numero mayor es ${max}`)
+console.log(`El numero mayor es ${max}`);

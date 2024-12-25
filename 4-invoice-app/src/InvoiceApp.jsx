@@ -57,7 +57,7 @@ export const InvoiceApp = () => {
         // console.log('el items cambio!')
     }, [items]);
 
-    const handlerAddItems = ({ product, price, quantity}) => {
+    const handlerAddItems = ({ product, price, quantity }) => {
 
         setItems([...items, {
             id: counter,
@@ -70,7 +70,7 @@ export const InvoiceApp = () => {
     }
 
     const handlerDeleteItem = (id) => {
-        setItems(items.filter(item => item.id !== id ))
+        setItems(items.filter(item => item.id !== id))
     }
 
     const onActiveForm = () => {
@@ -87,7 +87,7 @@ export const InvoiceApp = () => {
                         Ejemplo Factura
                     </div>
                     <div className="card-body">
-                        <InvoiceView id={ id } name={ name } />
+                        <InvoiceView id={id} name={name} />
 
                         <div className="row my-3">
 
@@ -101,11 +101,11 @@ export const InvoiceApp = () => {
 
                         </div>
 
-                        <ListItemsView title="Productos de la factura" items={items} handlerDeleteItem={ id => handlerDeleteItem(id) } />
+                        <ListItemsView title="Productos de la factura" items={items} handlerDeleteItem={id => handlerDeleteItem(id)} />
                         <TotalView total={total} />
                         <button className="btn btn-secondary"
-                            onClick={onActiveForm}>{!activeForm ? 'Agregar Item': 'Cerrar Form'}</button>
-                        { !activeForm || <FormItemsView handler={handlerAddItems} /> }
+                            onClick={onActiveForm}>{!activeForm ? 'Agregar Item' : 'Cerrar Form'}</button>
+                        {!activeForm || <FormItemsView handler={handlerAddItems} />}
                     </div>
                 </div>
             </div>

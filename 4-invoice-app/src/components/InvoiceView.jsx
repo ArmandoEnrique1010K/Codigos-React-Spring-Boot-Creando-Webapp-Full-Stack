@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 
-export const InvoiceView = ({id, name}) => {
+export const InvoiceView = ({ id, name }) => {
 
     return (
         <>

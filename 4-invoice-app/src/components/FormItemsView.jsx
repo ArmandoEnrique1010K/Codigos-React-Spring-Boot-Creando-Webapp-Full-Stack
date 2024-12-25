@@ -33,18 +33,26 @@ export const FormItemsView = ({ handler }) => {
     const onInvoiceItemsSubmit = (event) => {
         event.preventDefault();
 
-        if (product.trim().length <= 1) return;
-        if (price.trim().length <= 1) return;
-        if (isNaN(price.trim())) {
-            alert('Error la precio no es un numero')
+        if (product.trim().length < 1) {
+            alert('Error, el nombre del producto no puede estar vacio')
             return;
         }
-        if (quantity.trim().length < 1) {
-            alert('Error la cantidad tiene que ser mayor a 0')
+
+        if (price.trim().length <= 1) {
+            alert('Error, el precio debe tener 2 digitos')
+            return
+        }
+
+        if (isNaN(price.trim())) {
+            alert('Error, el precio no es un numero')
+            return;
+        }
+        if (quantity.trim() < 1) {
+            alert('Error, la cantidad tiene que ser mayor a 0')
             return;
         }
         if (isNaN(quantity.trim())) {
-            alert('Error la cantidad no es un numero')
+            alert('Error, la cantidad no es un numero')
             return;
         }
 

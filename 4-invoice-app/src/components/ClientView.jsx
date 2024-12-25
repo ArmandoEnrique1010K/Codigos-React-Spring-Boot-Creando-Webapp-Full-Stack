@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 
-export const ClientView = ({title, client}) => {
+export const ClientView = ({ title, client }) => {
 
     const {
         name: nameClient,
@@ -14,7 +14,7 @@ export const ClientView = ({title, client}) => {
 
     return (
         <>
-            <h3>{ title }</h3>
+            <h3>{title}</h3>
             <ul className="list-group">
                 <li className="list-group-item active">{nameClient} {lastName}</li>
                 <li className="list-group-item">{country} / {city}</li>

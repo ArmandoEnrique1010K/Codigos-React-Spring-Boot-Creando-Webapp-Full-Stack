@@ -1,10 +1,8 @@
-
-
 const user = {
-    username: 'andres',
-    email: 'correo@google.com',
-    age: 20,
-    ranking: 9,
+  username: "andres",
+  email: "correo@google.com",
+  age: 20,
+  ranking: 9,
 };
 
 // const username = user.username;
