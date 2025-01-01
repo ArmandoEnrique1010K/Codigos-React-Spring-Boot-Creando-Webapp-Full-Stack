@@ -5,11 +5,24 @@ const user = {
   ranking: 9,
 };
 
+// DESESTRUCTURACIÓN DE OBJETOS
+
+// Definir constantes individualmente puede ser útil, pero es menos conciso que la desestructuración, especialmente con objetos grandes.
 // const username = user.username;
 // const ranking = user.ranking;
 // const age = user.age;
 
+// La desestructuración permite extraer propiedades de un objeto y asignarlas a variables de manera concisa. Esto es útil para simplificar el acceso a las propiedades del objeto
+
+// El orden de las propiedades en el objeto no afecta la desestructuración
 const { username, ranking, age } = user;
 
 console.log(`${username} tiene ${age} de edad`);
 console.log(ranking);
+
+// Acceder a las propiedades directamente desde el objeto es posible, pero es menos limpio y menos eficiente que la desestructuración.
+
+// console.log(`${user.username} tiene ${user.age} de edad`);
+// console.log(user.ranking);
+
+// TIP: En VSCode puedes seleccionar un bloque de código y pulsar la combinación de teclas CTRL + K + C para convertirlo en un comentario.
