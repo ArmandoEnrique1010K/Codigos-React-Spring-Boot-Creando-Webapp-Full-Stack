@@ -1,4 +1,14 @@
+
 export const UserDetails = ({ user, id }) => (
+    // Si intentas mostrar un objeto directamente en el navegador, se producirá 
+    // un error porque React no puede renderizar objetos directamente.
+
+    // Para mostrar los valores de un objeto, debes acceder a sus propiedades 
+    // de la misma manera que en JavaScript.
+
+    // Para mostrar el objeto completo como una cadena de texto, se puede utilizar 
+    // el método global JSON.stringify(), convierte un objeto JavaScript en una 
+    // cadena de texto JSON.
     <div>
         que tal! {user.name} {user.lastName} con el id {id}
     </div>
