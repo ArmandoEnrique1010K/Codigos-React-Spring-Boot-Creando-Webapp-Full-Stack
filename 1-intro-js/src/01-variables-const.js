@@ -1,30 +1,27 @@
-// VARIABLES Y CONSTANTES
+// Actualmente se recomienda usar let en lugar de var para declarar una variable
 
-// Declara la variable firstname, atualmente se utiliza let en lugar de var
+// Variable
 let firstname = "Pepe";
-
-// Asigna este valor a la variable firstname
+// Se puede reasignar su valor
 firstname = "andres";
 
-// Declara la constante lastname
+// Constante
 const lastname = "Doe";
-
-// Error: No se puede asignar un nuevo valor a la constante
+// No se puede reasignar su valor
 // lastname = 'Roe';
 
-// Declara una constante de tipo boolean
+// Constante de tipo booleana
 const condicion = true;
 
-// Define una condición, se ejecuta si la constante es verdadera (true)
+// Condicion que es siempre verdadera
 if (condicion) {
-  // La constante lastname toma este valor solamente para este alcance
+  // Vuelve a declarar la constante lastname, solamente el valor se aplica en este
+  // alcance o scope
   const lastname = "Ale";
-  // Imprime el valor de lastname definido en este alcance
   console.log(lastname);
 }
 
-// Imprime un mensaje con saltos de linea y espacios en blanco utilizando comillas inversas (template string).
-// Utiliza la sintaxis ${variable} para mostrar la variable
+// En un alcance global, lastname toma el primer valor
+// Template String o plantilla de caracteres, sirve para imprimir un mensaje en la
+// consola (Pulsa F12 en el navegador Chrome)
 console.log(`Hola mundo!!!! ${firstname} - ${lastname}`);
-
-// Pulsa la tecla F12 para abrir las herramientas de desarrollo de Chrome, observa el resultado en la sección "consoles".

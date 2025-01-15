@@ -1,4 +1,4 @@
-# 01 Intro-js
+# 1-intro-js
 
 ## Instalaciones y herramientas del curso
 

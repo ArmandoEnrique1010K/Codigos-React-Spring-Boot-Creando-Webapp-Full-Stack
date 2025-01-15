@@ -1,18 +1,16 @@
-// OBJETOS EN JAVASCRIPT MODERNO
-
-// Los objetos en JavaScript son estructuras de datos clave que permiten agrupar datos y funcionalidades relacionadas. Son similares a los objetos JSON usados en APIs REST y forman la base para muchos patrones y técnicas en JavaScript.
-
-// Los objetos se definen utilizando llaves {} y pueden contener múltiples pares de propiedad y valor. Cada par se separa por una coma y los valores pueden ser cambiados dinámicamente.
-
-// Un objeto puede servir como prototipo para crear otros objetos, clonar o instanciar.
+// Los objetos son estructuras de datos, similares a los objetos JSON utilizados
+// en API REST
+// Un objeto tiene multiples pares de propiedad y valor, los valores pueden ser
+// modificados
+// Sirven como un prototipo para crear otros objetos, clonar o instanciar
 const invoice = {
   id: 10,
   name: "Compras de oficina",
 
-  // El constructor new Date() se utiliza para obtener la fecha y hora actual
+  // El constructor Date sirve para obtener la fecha y hora actual
   date: new Date(),
 
-  // Un objeto puede contener otro objeto como una de sus propiedades, permitiendo construir estructuras jerárquicas.
+  // Un objeto puede contener otro objeto anidado como una de sus propiedades
   client: {
     id: 2,
     name: "Jhon",
@@ -20,8 +18,10 @@ const invoice = {
     age: 20,
   },
 
-  // Los objetos en JavaScript pueden tener propiedades que son arreglos. Estos arreglos pueden contener una lista de objetos, y típicamente, generalmente cada objeto en la lista tiene las mismas propiedades. Esto es útil para representar colecciones de datos relacionados.
+  // Un objeto puede contener un arreglo, el arreglo puede contener una lista
+  // de objetos
   items: [
+    // Generalmente cada objeto en la lista debe tener las mismas propiedades
     {
       producto: "keyboard",
       price: 399,
@@ -38,28 +38,28 @@ const invoice = {
       quantity: 10,
     },
   ],
+  // Esto es útil para representar colecciones de datos relacionados
 
-  // Los métodos son funciones asociadas a un objeto. Se pueden definir dentro del objeto como cualquier otra propiedad.
+  // Un metodo es una función asociada a un objeto
+
+  // Imprime el nombre del cliente
   greeting: function () {
-    // Utiliza la palabra clave this para referirse al objeto en el que están definidos.
+    // La palabra this hace referencia a este objeto
     return `Hola ${this.client.name}`;
   },
 
-  // No se recomienda usar funciones de flecha como métodos de objetos, si necesitas acceder a las propiedades del objeto con this, puedes optar por el nombre del objeto.
-  // greeting: () => {
-  //   return `Hola ${invoice.client.name}`;
-  // },
+  // Los metodos no se definen con funciones de flechas, en el caso de hacerlo,
+  // reemplaza this con el nombre del objeto
 
-  // Método para calcular el precio total de la factura
+  // Obtiene el precio total de la factura
   total: function () {
-    // Inicializa la variable total
     let total = 0;
 
-    // El método forEach es comúnmente utilizado para iterar sobre los elementos de un arreglo y realizar una operación específica en cada uno.
-
-    // El parametro item representa cada elemento del arreglo items
+    // Itera sobre los items utilizando un bucle forEach, item representa cada
+    // elemento
     this.items.forEach((item) => {
-      // Calcula el total multiplicando el precio por la cantidad de cada item. El resultado se le suma al nuevo total
+      // Calcula el precio total, multiplicando el precio y la cantidad de cada
+      // item y lo asigna al nuevo total
       total = total + item.price * item.quantity;
     });
 
@@ -67,18 +67,21 @@ const invoice = {
   },
 };
 
-// Para acceder a las propiedades de un objeto, usa la notación de punto . seguida del nombre de la propiedad.
+// Usa la notación de punto "." para acceder a una propiedad del objeto
 
-// Puedes cambiar el valor de una propiedad asignando un nuevo valor con la notación de punto. Esto es flexible y directo, similar a los métodos set en otros lenguajes.
+// Puedes cambiar el valor de una propiedad asignando un nuevo valor con la
+// notación de punto
+
+// Esto es flexible y directo, similar a los métodos set en otros lenguajes
 // invoice.client.name = 'Pepe';
 // invoice.total = 5000;
 
-// Cuando se imprime un objeto, la consola del navegador muestra su estructura completa y las propiedades se despliegan en orden alfabético.
+// La consola del navegador muestra su estructura completa y las propiedades
+// se despliegan en orden alfabético
 console.log(invoice);
 
-// Asigna el valor devuelto por el método greeting del objeto invoice a una constante
+// Obtiene el valor devuelto por el método greeting del objeto invoice
 const greeting = invoice.greeting();
 console.log(greeting);
 
-// Imprime el valor devuelto por el método total
 console.log("Total: " + invoice.total());

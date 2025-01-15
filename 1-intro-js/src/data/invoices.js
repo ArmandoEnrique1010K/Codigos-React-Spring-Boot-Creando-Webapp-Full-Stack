@@ -69,9 +69,6 @@ const invoices = [
   },
 ];
 
-/* */
-/* */
-
 const invoiceByClientName = (clientName) => {
   return invoices.find((i) => i.client.name === clientName);
 };
@@ -80,145 +77,44 @@ const invoiceById = (id) => {
   return invoices.find((i) => i.id === id);
 };
 
-// PROMESAS
+// Una promesa es un objeto que representa la eventual finalización o falla de una
+// operación asíncrona. Permiten manejar tareas asíncronas de forma más clara que los
+// callbacks tradicionales.
 
-// Una promesa en JavaScript es un objeto que representa la eventual finalización (o falla) de una operación asíncrona y su valor resultante. Las promesas permiten manejar tareas asíncronas de manera más elegante y manejable que los callbacks tradicionales.
+// Las promesas se crean con el constructor Promise, que recibe una función con dos
+// parámetros:
 
-// Aunque el código en JavaScript se ejecuta de manera secuencial, las promesas operan de forma asíncrona. Esto significa que el código que sigue a una promesa puede ejecutarse antes de que la promesa se resuelva. Primero se ejecuta el código síncrono y luego el asíncrono.
+// resolve: Llamado cuando la operación es exitosa, pasando el resultado.
+// reject: Llamado cuando ocurre un error, pasando el motivo.
 
-// Las promesas son útiles para operaciones como solicitudes a una API, sin bloquear la ejecución del programa. Sin embargo, no garantizan un éxito del 100%, ya que pueden fallar por diversas razones.
+// La función global setTimeout puede utilizar dentro de una promesa para crear un retraso,
+// toma dos argumentos: una función callback o de flecha que ejecutara y el tiempo en
+// milisegundos que se espera antes de ejecutar esa función.
 
-/* */
+// Los métodos para manejar el resultado de las promesas son:
 
-// Para simular un retraso en JavaScript, se puede crear una promesa con el constructor Promise. Este constructor acepta una función que recibe dos parámetros: resolve y reject
+// then: Se ejecuta si la promesa se resuelve correctamente.
+// catch: Captura errores si la promesa es rechazada.
+// finally: Siempre se ejecuta, independientemente del resultado.
 
-// La función global setTimeout se usa dentro de la promesa para crear un retraso; setTimeout toma dos argumentos: una función callback o de flecha y el tiempo en milisegundos que se espera antes de ejecutar esa función.
-
-// El constructor Promise se utiliza principalmente para envolver funciones que no admiten promesas de forma nativa, especialmente aquellas que operan de manera asíncrona utilizando callbacks.
-
-// new Promise(() => {
-//   setTimeout(() => {
-//     console.log("Realizando alguna tarea con demora de 2.5 segundos...");
-//   }, 2500);
-// });
-
-/* */
-
-// METODOS ENCADENADOS EN PROMESAS
-
-// Las promesas en JavaScript son una forma de manejar operaciones asíncronas, permitiendo que el código espere a que se complete una tarea antes de continuar. Es fundamental comprender como se maneja su estado y su resultado.
-
-// Para crear una promesa, se utiliza el constructor Promise, que acepta una función de flecha con dos parámetros:
-
-// resolve: Es una función que se llama cuando la operación asíncrona se completa exitosamente. Se pasa un valor a resolve que se convierte en el resultado de la promesa.
-
-// reject: Es una función que se llama cuando ocurre un error durante la operación asíncrona. Se pasa un motivo o mensaje de error a reject.
-
-/* */
-
-// Se pueden encadenar métodos para manejar el resultado o el error de la promesa.
-
-// then
-
-// Se ejecuta si la promesa se resuelve exitosamente.
-// Recibe una función que maneja el valor resultante de la promesa.
-// Puede encadenarse para realizar acciones adicionales con el resultado.
-
-// catch
-
-// Se ejecuta si la promesa es rechazada.
-// Recibe una función que maneja el error o motivo del rechazo.
-// Captura y maneja errores que ocurren en la promesa o en cualquier parte del encadenamiento.
-
-// finally
-
-// Siempre se ejecuta, independientemente de si la promesa se resuelve o se rechaza.
-// Se usa para tareas de limpieza o código que debe ejecutarse sin importar el resultado de la promesa.
-
-// const promise = new Promise((resolve) => {
-//   setTimeout(() => {
-//     const result = invoiceById(1);
-//     resolve(result);
-//   }, 2500);
-// });
-
-// promise.then((result) => {
-//   console.log(result);
-//   console.log("Realizada con exito alguna tarea con demora de 2.5 segundos...");
-// });
-
-/* */
-
-// Cuando se trabaja con promesas, es común encontrarse con errores al consumir APIs de forma remota, pueden incluir errores HTTP, errores de sistema, o errores de recurso no encontrado (como el error 404).
-
-// Se puede definir un mensaje en la consola del navegador utilizando uno de estos métodos:
-
-// console.log: Se utiliza para imprimir información general o registros exitosos.
-// console.error: Se utiliza para mostrar mensajes de error.
-// console.warn: Se utiliza para mostrar advertencias.
-
-// const promise = new Promise((resolve, reject) => {
-//   setTimeout(() => {
-//     const result = invoiceById(4);
-
-//     if (result) {
-//       resolve(result);
-//     } else {
-//       reject("error: no existe la factura por el id");
-//     }
-//   }, 2500);
-// });
-
-// promise
-//   .then((result) => {
-//     console.log(result);
-//     console.log(
-//       "Realizada con exito alguna tarea con demora de 2.5 segundos..."
-//     );
-//   })
-
-//   .catch((error) => {
-//     console.error(error);
-//   });
-
-/* */
-
-// En aplicaciones frontend, las promesas se utilizan para manejar tareas asíncronas con retraso. Se manejan con then para éxito y catch para errores.
-// Puedes simplificar los métodos then y catch a una sola línea de código cada uno.
-// const promise = new Promise((resolve, reject) => {
-//   setTimeout(() => {
-//     const result = invoiceById(3);
-
-//     if (result) {
-//       resolve(result);
-//     } else {
-//       reject("error: no existe la factura por el id");
-//     }
-//   }, 2500);
-// });
-
-// promise.then(console.log).catch(console.error);
-
-/* */
-
-// Se puede encapsular una promesa en una función para hacerla reutilizable. En este ejemplo, se define una función findInvoiceById que busca una factura por su ID y devuelve una promesa.
-
-// La función findInvoiceById acepta un id, crea una promesa que simula una operación asíncrona (con un retraso de 2.5 segundos), y resuelve o rechaza la promesa según si la factura existe. La función es llamada con un ID y se manejan los resultados con then y catch.
-
-// Las promesas en JavaScript operan de manera sincrona, eso significa que el código que le sigue luego de la promesa puede ejecutarse antes de que la promesa se resuelva.
+// Puedes encapsular promesas en funciones para hacerlas más reutilizables:
 const findInvoiceById = (id) => {
   const promise = new Promise((resolve, reject) => {
+    // Simula un retraso con la función setTimeout
     setTimeout(() => {
       // Llama a la función para buscar la factura por ID
       const result = invoiceById(id);
 
       // Si se encuentra la factura, se resuelve la promesa
-      // Recuerda que el método find devuelve el objeto resultante de la lista de objetos o un undefined
+      // En este caso, el método find puede devolver el objeto resultante de la lista de
+      // objetos o un undefined
       if (result) {
         resolve(result);
       } else {
         reject("error: no existe la factura por el id!");
       }
+
+      // Ejecuta la función dentro de 2500 milisegundos, equivale a 2,5 seg.
     }, 2500);
   });
 
@@ -228,25 +124,23 @@ const findInvoiceById = (id) => {
 
 /* */
 
-// Para exportar una función o un valor como el módulo por defecto, se usa export default.
+// Para exportar un módulo se utiliza el termino export.
 
-// export default (clientName) => {
-//   return invoices.find((i) => i.client.name === clientName);
-// };
+// Utiliza export default para exportar el módulo por defecto.
 
-// En un modulo, puedes tener varias exportaciones, pero solo una de ellas puede ser por defecto, esta exportación facilita la importación de una funcionalidad principal.
+// En un modulo, puedes tener varias exportaciones, pero solo una de ellas puede ser por
+// defecto, esta exportación facilita la importación de una funcionalidad principal.
 
-// Luego puedes importar el módulo por defecto utilizando cualquier nombre, por ejemplo: invoiceByClientNameDefault
+// Luego puedes importar el módulo por defecto utilizando cualquier nombre, por ejemplo:
+// invoiceData para el modulo invoices
 
-// import invoiceByClientNameDefault, { paper, invoices } from "./data/invoices";
-
-/* */
-
-// Puedes agrupar varias exportaciones, incluyendo la exportación por defecto, al final del archivo. En este contexto, la exportación del módulo por defecto se define utilizando as default.
+// Puedes agrupar varias exportaciones, incluyendo la exportación por defecto, al final
+// del código. En este contexto, la exportación del módulo por defecto se define utilizando
+// as default.
 export {
   papper,
   invoices as default,
   invoiceByClientName,
   invoiceById,
-  findInvoiceById, // Exporta la función asincrona findInvoiceById
+  findInvoiceById,
 };
