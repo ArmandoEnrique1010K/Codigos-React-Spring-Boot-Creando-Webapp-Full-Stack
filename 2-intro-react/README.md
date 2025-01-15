@@ -44,12 +44,36 @@ El uso de etiquetas HTML directamente en React puede parecer extraño al princip
 
 ## Carpeta components
 
-Es una buena práctica organizar el proyecto en carpetas. Dentro de la carpeta raíz src, crea una subcarpeta llamada components para almacenar los modulos de tipo componente.
+- Es una buena práctica organizar el proyecto en carpetas. Dentro de la carpeta raíz `src`, crea una subcarpeta llamada components para almacenar los modulos de tipo componente.
 
-Es importante tener en cuenta que los nombres de los archivos JSX utilizan la notación UpperCamelCase. Se recomienda evitar cambiar el nombre de los archivos creados para no tener inconvenientes al momento de ejecutar el proyecto.
+- Es importante tener en cuenta que los nombres de los archivos JSX utilizan la notación UpperCamelCase. Se recomienda evitar cambiar el nombre de los archivos creados para no tener inconvenientes al momento de ejecutar el proyecto.
+
+- Por otro lado, el componente principal debe llevar el sufijo "App" y debe permanecer en la carpeta `src`, no en ninguna subcarpeta.
 
 ## Visualizar los componentes con React Developer Tools
 
 En las herramientas de desarrollo del navegador (al pulsar F12), busca la sección Components para ver una lista de los componentes de React que están presentes en la página. En este caso, selecciona el componente HelloWorldApp para expandirlo y visualizar todas sus propiedades definidas con sus respectivos valores.
 
-## CONTINUA EN 06
+## Libreria PropTypes
+
+PropTypes es una librería esencial en React para validar y gestionar las propiedades de los componentes. Permite especificar los tipos de datos esperados para las propiedades, definir valores predeterminados y marcar ciertas propiedades como obligatorias. Esto ayuda a que las aplicaciones sean más predecibles y resistentes a errores, mejorando la robustez y claridad del código.
+
+### Instalar la dependencia PropTypes
+
+Es importante tener en cuenta que Vite no incluye la libreria PropTypes por defecto, por lo cual se procede a instalarlo manualmente usando el comando `npm install prop-types` en una terminal de Visual Studio Code.
+
+Verifica que `prop-types` esté incluido como una dependencia en el archivo `package.json`.
+
+## Default Props (desactualizado)
+
+- Otra forma de manejar valores por defecto en las propiedades es mediante el uso de defaultProps. Esto permite establecer valores predeterminados para las propiedades en caso de que no se pasen desde el componente padre.
+
+- Puedes utilizar React Developer Tools para visualizar las propiedades que se pasan a los componentes, incluyendo aquellas que no están definidas explícitamente en el componente padre main (valores definidos con defaultProps).
+
+## Subcomponentes en React
+
+- Una de las grandes ventajas de React es la capacidad de dividir un componente en subcomponentes reutilizables. Esto mejora la organización y la reutilización del código.
+
+- En este caso se han creado tres subcomponentes que se instanciarán en el componente HelloWorldApp con sus respectivas propiedades: el título (title), los detalles del usuario (id, user.name y user.lastname) y el libro (book).
+
+- Con la organización de componentes, la aplicación se vuelve más modular y fácil de entender. Cada componente tiene una responsabilidad clara y puede ser reutilizado en diferentes partes de la aplicación o en otros proyectos. La composición de componentes es una práctica fundamental en React que promueve un código limpio y mantenible.

@@ -1,4 +1,8 @@
+// Puedes utilizar una función de flecha sin return ni llaves para el componente UserDetails, 
+// porque devuelve directamente el JSX (la plantilla HTML como un objeto)
 
+// Recuerda aplicar la desestructuración para obtener los valores recibidos de las 
+// propiedades
 export const UserDetails = ({ user, id }) => (
     // Si intentas mostrar un objeto directamente en el navegador, se producirá 
     // un error porque React no puede renderizar objetos directamente.

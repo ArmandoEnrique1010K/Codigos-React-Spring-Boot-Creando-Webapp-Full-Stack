@@ -62,20 +62,43 @@ export const HelloWorldApp = ({ user, id, title, book }) => {
         // de React.
 
         <>
+            {/* Instancia del componente Title, se pasa una propiedad title con el valor de
+            title definido en el componente main */}
             <Title title={title} />
+            {/* Recuerda que el valor user es un objeto */}
             <UserDetails user={user} id={id} />
+            {/* Se pasa el valor por defecto definido en book */}
             <Book book={book} />
         </>
     );
 }
 
+// Define los tipos de datos de las propiedades recibidas en el componente HelloWorldApp
+// utilizando propTypes
 HelloWorldApp.propTypes = {
+    // La propiedad title es obligatoria y debe ser un string
     title: PropTypes.string.isRequired,
     id: PropTypes.number.isRequired,
     user: PropTypes.object.isRequired,
 }
 
+// En el caso de no proporcionar la propiedad title en el componente padre (main), se 
+// producirá un error en la consola indicando que la propiedad title ha fallado la 
+// validación porque está marcada como requerida pero se pasa como undefined.
+
+// Es importante tener en cuenta el tipo de dato que se pasa entre propiedades de
+// componente padre a hijo
+
+// Define un valor por defecto para la propiedad title utilizando defaultProps
 HelloWorldApp.defaultProps = {
     title: 'Hola mundo por defecto!',
+    // Define la propiedad book y asignale un valor por defecto de tipo string
+    // book no se ha definido en el componente padre y se asigna este valor
     book: 'UMl got a gota'
 }
+
+// Si defines un valor por defecto para la propiedad title en el componente hijo 
+// HelloWorldApp mediante defaultProps y también proporcionas un valor para title en 
+// el componente padre main, el valor definido en el componente padre prevalecerá.
+
+

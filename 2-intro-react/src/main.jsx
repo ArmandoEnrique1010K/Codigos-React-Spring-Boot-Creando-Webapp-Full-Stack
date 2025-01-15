@@ -22,6 +22,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 
     // Al sumar un valor al id, si id pasa como un String, se concatenará en 
     // lugar de sumarse numéricamente. La propiedad id es de tipo number
+
+    // Si se define solamente la propiedad title sin un valor asignado, es 
+    // equivalente a title={true}.
+
+    // En React, si pasas una propiedad de tipo boolean a un componente, no se 
+    // mostrará el valor en la vista. En su lugar, puedes utilizar una condición 
+    // con un operador ternario para renderizar contenido basado en esa propiedad.
     />
   </React.StrictMode>
 )
