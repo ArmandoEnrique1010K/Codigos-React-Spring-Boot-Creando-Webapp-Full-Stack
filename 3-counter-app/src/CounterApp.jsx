@@ -1,3 +1,4 @@
+// Importa el hook useState de React
 import { useState } from "react";
 
 export const CounterApp = ({ value }) => {
