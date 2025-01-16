@@ -22,6 +22,7 @@
 ```powershell
 "node --version"
 "node -v"
+
 "npm --version"
 "npm -v"
 ```
@@ -33,6 +34,8 @@
 - Es popular por su rendimiento y enfoque en la instalación de dependencias, en comparación con Create React App.
 
 ### Comandos para crear un proyecto
+
+Abre una terminal powershell, introduce los siguientes comandos:
 
 - `cd <<Ruta hacia la carpeta>>`: Navega hacia la carpeta de proyectos (tambien puedes optar arrastrando la carpeta hacia la consola)
 
@@ -48,7 +51,9 @@
 
 - `ls`: Lista los archivos y carpetas en la ubicación actual (se puede utilizar para verificar que exista el archivo `package.json`)
 
-- `npm install`: Instala las dependencias del proyecto (se encuentran en `package.json`)
+- `npm install`: Instala las dependencias del proyecto (se encuentran listadas en `package.json`).
+
+<img src="assets/2025-01-15-19-52-27-image.png" title="" alt="" data-align="center">
 
 ### Importar el proyecto hacia VSCode
 
@@ -66,17 +71,21 @@
 
 2. Ejecuta el comando `npm run dev`, esto levantara el servidor web de desarrollo, que esta definido en el archivo `package.json` bajo scripts: `{ "dev": "vite" }`
 
-3. Accede a la dirección predeterminada de Vite: `http://localhost:5173/` en tu navegador
+3. Accede a la dirección predeterminada de Vite: `http://localhost:5173/` en tu navegador.
+
+<img src="assets/2025-01-15-19-53-34-image.png" title="" alt="" data-align="center">
 
 ### Detener la ejecución del servidor
 
-- Pulsa 2 veces `CTRL + C` en la terminal en la que se esta ejecutando el proyecto
+- Pulsa 2 veces `CTRL + C` en la terminal en la que se esta ejecutando el proyecto.
+
+<img title="" src="assets/2025-01-15-19-53-05-image.png" alt="" data-align="center">
 
 ## Estructura de la aplicación
 
 Toda aplicación de React generada con Vite, poose la siguiente estructura:
 
-- `node_modules`: librerías y dependencias instaladas generadas después de ejecutar npm install.
+- `node_modules`: librerías y dependencias instaladas generadas después de ejecutar `npm install`.
 
 - `public`: recursos estáticos como imágenes y archivos JavaScript personalizados.
 
@@ -88,7 +97,11 @@ Toda aplicación de React generada con Vite, poose la siguiente estructura:
 
 - `vite.config.js`: configuraciones de Vite como plugins, alias y configuraciones de servidor de desarrollo.
 
+<img src="assets/2025-01-15-19-46-46-image.png" title="" alt="" data-align="center">
+
 ### Limpiar el proyecto
+
+Puedes proceder a realizar lo siguiente, solamente para el primer proyecto:
 
 1. Borra los archivos `app.css`, `app.jsx`, `index.css` y la carpeta `assets`. En VSCode, puedes seleccionar varios archivos manteniendo pulsada la tecla `CTRL`, haz clic derecho y selecciona `Delete`.
 
