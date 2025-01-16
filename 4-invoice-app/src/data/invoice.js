@@ -1,4 +1,5 @@
-// El objeto invoice (factura) representa los datos estaticos de la aplicación, es un modulo exportable
+// El objeto invoice (factura) representa los datos estaticos de la aplicación,
+// es un modulo exportable
 export const invoice = {
   id: 10,
   name: "Componentes PC",

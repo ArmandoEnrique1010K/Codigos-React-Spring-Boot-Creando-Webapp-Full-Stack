@@ -14,7 +14,9 @@ export const InvoiceView = ({ id, name }) => {
     )
 }
 
-// Aplica propTypes a las propiedades recibidas del componente, se asigna el tipo de dato y si es obligatorio
+// Aplica propTypes a las propiedades recibidas del componente, se asigna el tipo de dato y 
+// si es obligatorio
+
 // Realiza el mismo procedimiento con los demás componentes
 InvoiceView.propTypes = {
     id: PropTypes.number.isRequired,

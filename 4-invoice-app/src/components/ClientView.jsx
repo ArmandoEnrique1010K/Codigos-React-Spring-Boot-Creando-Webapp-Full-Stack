@@ -21,7 +21,7 @@ export const ClientView = ({ title, client }) => {
             <ul className="list-group">
                 {/* Muestra el valor de nameClient (propiedad renombrada) */}
 
-                {/* active sirve para resaltar un elemento */}
+                {/* la clase active sirve para resaltar un elemento, por defecto de color azul */}
                 <li className="list-group-item active">{nameClient} {lastName}</li>
                 <li className="list-group-item">{country} / {city}</li>
                 <li className="list-group-item">{street} {number}</li>
