@@ -31,7 +31,7 @@
 
 - Vite es una herramienta de compilación rápida y eficiente para la construcción de aplicaciones frontend.
 
-- Es popular por su rendimiento y enfoque en la instalación de dependencias, en comparación con Create React App.
+- Es popular por su rendimiento y enfoque en la instalación de dependencias, en comparación con **Create React App**.
 
 ### Comandos para crear un proyecto
 
@@ -57,13 +57,13 @@ Abre una terminal powershell, introduce los siguientes comandos:
 
 ### Importar el proyecto hacia VSCode
 
-- Existe 2 formas:
-  
-  1. Arrastra la carpeta del proyecto (en este caso `01-intro-js`) a la ventana de VSCode.
-  
-  2. En VSCode, clic en el menú `File`, opción `Open Folder` y selecciona la carpeta raíz del proyecto
+Existen 2 formas:
 
-**Nota**: Luego de importar aparece un cuadro de diálogo preguntando "Do you trust the authors of the files in this folder?", solamente haz clic en Yes, I trust the autors, para permitir modificaciones en el código fuente del proyecto.
+1. Arrastra la carpeta del proyecto (en este caso `01-intro-js`) a la ventana de VSCode.
+
+2. En VSCode, clic en el menú `File`, opción `Open Folder` y selecciona la carpeta raíz del proyecto
+
+**Nota**: Luego de importar aparece un cuadro de diálogo preguntando **Do you trust the authors of the files in this folder?**, solamente haz clic en **Yes, I trust the autors**, para permitir modificaciones en el código fuente del proyecto.
 
 ### Iniciar el servidor de desarrollo
 
@@ -85,17 +85,17 @@ Abre una terminal powershell, introduce los siguientes comandos:
 
 Toda aplicación de React generada con Vite, poose la siguiente estructura:
 
-- `node_modules`: librerías y dependencias instaladas generadas después de ejecutar `npm install`.
+- `node_modules`: Librerías y dependencias instaladas generadas después de ejecutar `npm install`.
 
-- `public`: recursos estáticos como imágenes y archivos JavaScript personalizados.
+- `public`: Recursos estáticos como imágenes.
 
-- `src`: todo el código de la aplicación React escrito en JavaScript.
+- `src`: Todo el código de la aplicación React escrito en JavaScript.
 
 - `index.html`: Actúa como el punto de entrada principal para la aplicación React.
 
-- `package.json`: la lista de dependencias y scripts del proyecto.
+- `package.json`: Lista de dependencias y scripts del proyecto.
 
-- `vite.config.js`: configuraciones de Vite como plugins, alias y configuraciones de servidor de desarrollo.
+- `vite.config.js`: Configuraciones de Vite como plugins, alias y configuraciones de servidor de desarrollo.
 
 <img src="assets/2025-01-15-19-46-46-image.png" title="" alt="" data-align="center">
 
