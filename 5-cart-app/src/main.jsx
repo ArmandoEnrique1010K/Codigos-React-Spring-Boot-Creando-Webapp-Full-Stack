@@ -5,7 +5,7 @@ import { CartApp } from './CartApp'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    {/* Habilita el sistema de rutas de React Router Dom */}
+    {/* Habilita el sistema de enrutado de React Router en la aplicación */}
     <BrowserRouter>
       <CartApp />
     </BrowserRouter>

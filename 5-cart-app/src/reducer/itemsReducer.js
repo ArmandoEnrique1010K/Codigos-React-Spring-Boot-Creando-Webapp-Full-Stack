@@ -5,7 +5,7 @@ import {
   UpdateQuantityProductCart,
 } from "./itemsActions";
 
-// Función de tipo reducer, normalmente se establece en el state el tipo de dato
+// Función de tipo reducer, normalmente se establece en el state el tipo de dato y en action se establece un objeto que contiene un type para el tipo de acción y el payload, el contenido que se recibe
 export const itemsReducer = (state = [], action) => {
   // Utiliza una sentencia switch para definir cada una de las acciones
   switch (action.type) {
@@ -28,6 +28,8 @@ export const itemsReducer = (state = [], action) => {
 
       // Itera con el valor de state cada item (el valor inicial) con el metodo map
       return state.map((i) => {
+        // i representa cada elemento de state
+
         // Si el id del producto es igual al id que se recibe del payload (un objeto product)
         if (i.product.id === action.payload.id) {
           return {
@@ -37,14 +39,16 @@ export const itemsReducer = (state = [], action) => {
           };
         }
 
-        // Los demás items quedan tal y como estan
+        // Los demás items quedan tal y como estan (intactos)
         return i;
       });
 
     // Caso para eliminar un producto del carrito
     case DeleteProductCart:
+      // Excluye del arreglo el elemento cuyo id coincide con el que se recibe desde el payload (el id numerico)
       return state.filter((i) => i.product.id !== action.payload);
 
+    // Normalmente se define lo siguiente, en el caso de que el type sea cualquier otra acción que no coincida con las que fuerón definidas anteriormente (no se llega a utilizar)
     default:
       return state;
   }

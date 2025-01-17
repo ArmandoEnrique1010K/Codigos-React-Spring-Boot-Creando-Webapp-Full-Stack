@@ -11,7 +11,9 @@ export const getProducts = async () => {
   return products;
 };
 
+// Función para calcular el total
 export const calculateTotal = (items) => {
+  // Utiliza el metodo reduce para devolver un unico elemento del arreglo recibido como argumento
   return items.reduce(
     (accumulator, item) => accumulator + item.product.price * item.quantity,
     0

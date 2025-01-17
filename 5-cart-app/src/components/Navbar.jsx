@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 
+// Este componente representa la barra de navegación
 export const Navbar = () => {
 
     return (<>
@@ -12,6 +13,7 @@ export const Navbar = () => {
                 <div className="collapse navbar-collapse" id="navbarNav">
                     <ul className="navbar-nav">
                         <li className="nav-item">
+                            {/* NavLink se utiliza para definir un enlace, similar a la etiqueta <a></a>, tiene una propiedad to para definir el endpoint */}
                             <NavLink className={'nav-link'} to="/">Home</NavLink>
                         </li>
                         <li className="nav-item">

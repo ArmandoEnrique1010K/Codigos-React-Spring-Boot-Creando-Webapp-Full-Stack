@@ -5,21 +5,31 @@ import { calculateTotal } from "../services/productService";
 // Componente para la vista del carrito de compras
 export const CartView = ({ handlerDelete, items }) => {
 
+    // State para el total del carrito
     const [total, setTotal] = useState(0);
+
+    // Este hook se utiliza para definir una ruta, es proporcionado por React Router DOM
     const navigate = useNavigate();
 
+    // Efecto secundario que depende de los items del carrito
     useEffect(() => {
+        // Recalcula el total con la función calculateTotal, pasa los items como argumento
         setTotal(calculateTotal(items));
     }, [items]);
 
+    // Función auxiliar para eliminar un producto por su ID
     const onDeleteProduct = (id) => {
         // console.log('eliminado producto')
+
+        // Llama a handlerDelete (función como propiedad recibida) y se le pasa el mismo ID
         handlerDelete(id);
     }
 
+    // Función para navegar al endpoint "/catalog", se redirige utilizando la constante navigate
     const onCatalog = () => {
         navigate('/catalog');
     }
+
     return (
         <>
             <h3>Carro de compras</h3>
@@ -42,6 +52,7 @@ export const CartView = ({ handlerDelete, items }) => {
                             <td>{item.quantity}</td>
                             {/* El precio total por item se calcula multiplicando la cantidad por el precio */}
                             <td>{item.quantity * item.product.price}</td>
+                            {/* Botón para eliminar el producto, llama a onDeleteProduct y se la pasa el id del producto */}
                             <td><button
                                 className="btn btn-danger"
                                 onClick={() => onDeleteProduct(item.product.id)}>eliminar</button></td>
@@ -59,6 +70,8 @@ export const CartView = ({ handlerDelete, items }) => {
                     </tr>
                 </tfoot>
             </table>
+
+            {/* Botón para llamar a la función onCatalog */}
             <button
                 className="btn btn-success"
                 onClick={onCatalog}
