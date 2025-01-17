@@ -69,6 +69,8 @@ En React, se utiliza la propiedad **`className`** en lugar de **`class`** para a
   
   - **card-header**: Estilo para el encabezado del card.
   - **card-body**: Contenido principal del card.
+  - **card-title**: Titulo del card.
+  - **card-text**: Texto dentro del cuerpo del card.
 
 ### Clases de márgenes y anchos
 
@@ -78,14 +80,18 @@ En React, se utiliza la propiedad **`className`** en lugar de **`class`** para a
 
 ### Texto y badges
 
+- **Text-start**: Alinea el texto hacia la izquierda.
 - **text-end**: Alinea el texto hacia la derecha.
 - **badge bg-success**: Aplica estilo de badge (etiqueta) con un fondo verde.
+- **fw-bold**: Texto en negrita
 
 ### Formularios y botones
 
 - **form-control**: Aplica estilo a campos de entrada de tipo `text` de formularios.
 - **btn btn-primary**: Estiliza un botón con el tema principal (color azul).
 - **btn btn-secondary**: Estiliza un botón con un tema secundario (color gris).
+- **btn btn-danger**: Estiliza un botón con un color rojo (acción destructiva).
+- **btn btn-success**: Estiliza un botón con un color verde (acción realizada).
 
 ## Listas en React
 

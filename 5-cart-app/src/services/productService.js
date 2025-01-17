@@ -6,7 +6,9 @@ export const getProducts = async () => {
   // return products;
 
   // ... o utilizando datos desde la API
+  // Utiliza la función global fetch para realizar una petición de tipo GET a la URL
   const response = await fetch("http://localhost:8080/products");
+  // Convierte la respuesta de los datos en formato JSON
   const products = await response.json();
   return products;
 };

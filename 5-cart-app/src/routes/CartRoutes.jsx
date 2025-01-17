@@ -35,7 +35,7 @@ export const CartRoutes = ({ handlerAddProductCart, handlerDeleteProductCart, ca
             )} />
 
             {/* Ruta hacia la pagina de inicio */}
-            {/* El componente Navigate sirve para redirigir hacia una ruta existente, se establece en la propiedad to */}
+            {/* El componente Navigate sirve para redirigir hacia una ruta existente, la ruta se establece en la propiedad to */}
             <Route path="/" element={<Navigate to={'/catalog'} />} />
 
         </Routes>
