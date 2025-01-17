@@ -129,7 +129,7 @@ const [state, dispatch] = useReducer(reducer, initialState);
 - `reducer`: La función que define cómo cambiar el estado basado en la acción recibida.
 - `initialState`: El valor inicial del estado.
 
-<img src="assets/2025-01-17-00-17-01-image.png" title="" alt="" data-align="center">
+<img title="" src="assets/2025-01-17-00-17-01-image.png" alt="" data-align="center" width="556">
 
 ### Ejemplo básico
 
@@ -513,7 +513,3 @@ const App = () => {
 
 export default App;
 ```
-
-## Introducción al arbol de componentes
-
-En una aplicación React, el **árbol de componentes** es una representación jerárquica de los componentes de la aplicación, donde cada componente puede contener otros componentes como hijos. Los componentes se organizan y comunican a través de **props** (propiedades) y **estado**. React permite gestionar esta estructura a través de hooks como `useState`, `useReducer` y `useContext`, además de herramientas de enrutamiento como `React Router` para navegar entre diferentes vistas.
