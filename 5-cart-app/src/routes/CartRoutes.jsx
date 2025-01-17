@@ -6,7 +6,9 @@ export const CartRoutes = ({ handlerAddProductCart, handlerDeleteProductCart, ca
     return (
         <Routes>
             <Route
+                // En el path no se utiliza un "/" al inicio del endpoint
                 path="catalog"
+                // Pasa la función handlerAddproductCart como el valor de handler
                 element={<CatalogView handler={handlerAddProductCart} />}
             />
 
@@ -16,6 +18,7 @@ export const CartRoutes = ({ handlerAddProductCart, handlerDeleteProductCart, ca
                     :
                     (
                         <div className="my-4 w-50">
+                            {/* Pasa cartItems como el valor para la propiedad items */}
                             <CartView items={cartItems} handlerDelete={handlerDeleteProductCart} />
                         </div>
                     )

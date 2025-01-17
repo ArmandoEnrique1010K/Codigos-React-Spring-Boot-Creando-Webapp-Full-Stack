@@ -188,7 +188,7 @@ export const InvoiceApp = () => {
                             onClick={onActiveForm}>{!activeForm ? 'Agregar Item' : 'Cerrar Form'}</button>
 
                         {/* Utiliza un operador ternario simplificado, solamente mostrara el 
-                        formulario si activeForm es false */}
+                        formulario si !activeForm es false */}
 
                         {/* Pasa la definición de la función handlerAddItems a la propiedad 
                         handler */}
