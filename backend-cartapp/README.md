@@ -425,3 +425,35 @@ INSERT INTO products (name, description, price) VALUES
 <img src="assets/2025-01-17-21-48-29-image.png" title="" alt="" data-align="center">
 
 Este flujo asegura una configuración básica de Spring Boot con MySQL, facilitando el desarrollo y permitiendo ajustes en entornos de producción.
+
+## Configuración de CORS en el backend
+
+El error relacionado con CORS (Cross-Origin Resource Sharing) ocurre cuando un cliente intenta acceder a recursos de un servidor que se encuentra en un dominio o puerto diferente. Este control de acceso está diseñado como una medida de seguridad del navegador para proteger los recursos del servidor.
+
+<img src="assets/2025-01-18-16-16-37-image.png" title="" alt="" data-align="center">
+
+Spring Boot proporciona la anotación `@CrossOrigin`, que se utiliza para habilitar solicitudes de recursos desde dominios o puertos diferentes. Puedes agregar esta anotación en los controladores o métodos específicos.
+
+- **`origins`**: Define el dominio del cliente permitido (en este caso, `http://localhost:3000` para React en desarrollo).
+
+```java
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@CrossOrigin(origins = "http://localhost:3000") // Especifica la URL del cliente (React)
+public class ProductController {
+
+    @GetMapping("/products")
+    public List<Product> getAllProducts() {
+        // Lógica para obtener la lista de productos
+        return productService.findAll();
+    }
+}
+```
+
+### Recomendaciones
+
+- En **entornos de producción**, asegúrate de limitar los dominios permitidos en `allowedOrigins` para evitar accesos no deseados.
+- Evita usar configuraciones demasiado permisivas (como `allowedOrigins("*")`) a menos que sea estrictamente necesario.

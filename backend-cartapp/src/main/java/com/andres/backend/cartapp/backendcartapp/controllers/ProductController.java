@@ -11,6 +11,12 @@ import com.andres.backend.cartapp.backendcartapp.models.entities.Product;
 
 // @RestController es una anotación que combina @Controller con @ResponseBody, permite que la API devuelva datos en formato JSON
 @RestController
+
+// Para realizar la conexión al frontend se necesita configurar los CORS
+
+// CrossOrigin, tiene un atributo origins, se define un arreglo
+// o un string para especificar la URL del cliente que quiere acceder al
+// backend, se coloca el dominio (sin el / al final del dominio)
 @CrossOrigin(origins = "http://localhost:5173")
 public class ProductController {
 
