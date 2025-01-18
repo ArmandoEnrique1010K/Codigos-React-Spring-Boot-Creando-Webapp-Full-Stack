@@ -1,3 +1,4 @@
+# Inserta los siguientes datos desde el servidor web y no desde MySQL WorkBench
 INSERT INTO products (name, description, price) VALUES ('Teclado Mecanico RGB', 'Teclado Mecanico con luces RGB switches cherry red', 1000);
 INSERT INTO products (name, description, price) VALUES ('Samsung Smart TV 55', 'Color optimizado para una imagen vibrante y realista gracias al potente Crystal Processor 4K', 3000);
 INSERT INTO products (name, description, price) VALUES ('Audifono Bluetooth Sony', 'Audifono Bluetooth para smartphone', 770);

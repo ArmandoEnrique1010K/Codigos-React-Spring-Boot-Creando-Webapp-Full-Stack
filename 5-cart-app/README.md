@@ -1,5 +1,66 @@
 # 5-cart-app
 
+## Estructura de archivos y carpetas
+
+En este proyecto, además de las carpetas principales previamente mencionadas (`Components`, `Data`, `Service`, `main.jsx`, y `CartApp`), se incluyen las siguientes carpetas adicionales que cumplen roles específicos dentro de la lógica de la aplicación:
+
+- **hooks**: Contiene la lógica JavaScript de los hooks personalizados, que encapsulan funcionalidades reutilizables para manejar lógica compleja de estado o efectos.
+
+- **reducer**: Incluye funciones reductoras utilizadas junto con el hook `useReducer`, las cuales definen cómo se actualiza el estado global de la aplicación basándose en las acciones.
+
+- **routes**: Se encarga del mapeo de las rutas de la aplicación mediante el uso de `React Router`. Define qué componente se renderiza en función de la URL activa.
+
+<img src="assets/2025-01-17-19-40-12-image.png" title="" alt="" data-align="center">
+
+## Arbol de componentes
+
+El flujo de datos y la jerarquía de componentes en esta aplicación pueden representarse de la siguiente manera:
+
+1. **`data` (Datos)**:
+   
+   - Los datos se obtienen ya sea de archivos estáticos en la carpeta `Data` o directamente desde una **API externa** a través de servicios definidos en la carpeta `services`.
+
+2. **`services` (Servicios)**:
+   
+   - Contiene funciones encargadas de realizar solicitudes HTTP (como `fetch` o `axios`) para interactuar con APIs y traer los datos necesarios para la aplicación.
+
+3. **`reducer` (Reductor)**:
+   
+   - Define cómo se actualiza el estado global de la aplicación al recibir acciones específicas (como añadir o eliminar productos en el carrito).
+
+4. **`hooks` (Hooks personalizados)**:
+   
+   - Encapsulan la lógica del estado (como la interacción con el reducer) en funciones reutilizables. Estos hooks se encargan de conectar los componentes con el estado de la aplicación y de manejar la lógica específica.
+
+5. **`router` (Rutas)**:
+   
+   - Mapea las rutas de la aplicación, asociando cada ruta a un componente específico. Permite navegar entre diferentes vistas como la página de inicio, carrito, o un detalle de producto.
+
+6. **`components` (Componentes)**:
+   
+   - Son los elementos visuales y funcionales que renderizan la interfaz de usuario. Los componentes reciben datos mediante **props** y manejan eventos para interactuar con los hooks y el estado global.
+
+```textile
+data (Datos traídos desde la API o archivos)
+ ↓
+services (Servicios para manejar la interacción con APIs)
+ ↓
+reducer (Función reductora para manejar el estado)
+ ↓
+hooks (Lógica personalizada conectada al estado)
+ ↓
+router (Definición de rutas y navegación)
+ ↓
+components (Interfaz visual y funcionalidad)
+```
+
+### Ventajas de Esta Organización
+
+- **Modularidad**: Cada funcionalidad (datos, lógica, estado, y vistas) está separada en carpetas específicas.
+- **Reutilización**: Los hooks personalizados y los reductores pueden ser reutilizados en múltiples componentes.
+- **Mantenibilidad**: La estructura jerárquica hace que el proyecto sea más fácil de entender, escalar y mantener.
+- **Navegación Eficiente**: Gracias a `React Router`, la aplicación permite una navegación fluida entre diferentes vistas sin recargar la página.
+
 ## Método map vs filter
 
 Es mejor usar **`map`** en lugar de **`filter`** para actualizar la cantidad de un producto porque cada uno tiene un propósito diferente y `map` es más adecuado para transformar un arreglo sin eliminar elementos.
