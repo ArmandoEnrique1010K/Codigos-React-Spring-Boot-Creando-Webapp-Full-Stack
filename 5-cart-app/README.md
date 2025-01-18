@@ -574,3 +574,72 @@ const App = () => {
 
 export default App;
 ```
+## Obtener los datos del servidor
+
+Para obtener los datos del servidor en el frontend, se recomienda usar una función asíncrona que haga uso de fetch o la biblioteca axios. A continuación, se detalla cómo definir esta función dentro de un servicio en una aplicación React:
+
+### 1. Crear un Archivo de Servicio
+
+Dentro de la carpeta `services`, crea un archivo, por ejemplo, `productService.js`, que contendrá las funciones para interactuar con el backend.
+
+```js
+// productService.js
+import axios from 'axios';
+
+const API_URL = 'http://localhost:8080/products'; // URL del endpoint
+
+// Función para obtener todos los productos
+export const getProducts = async () => {
+    try {
+        const response = await axios.get(API_URL);
+        return response.data; // Devuelve los datos en formato JSON
+    } catch (error) {
+        console.error('Error al obtener los productos:', error);
+        throw error;
+    }
+};
+```
+
+### 2. Llamar al Servicio desde un Componente
+
+En el componente React donde se mostrarán los productos, importa la función getProducts y defínela en una función asíncrona.
+
+```jsx
+import React, { useEffect, useState } from 'react';
+import { getProducts } from './services/productService';
+
+const ProductList = () => {
+    const [products, setProducts] = useState([]);
+
+    // Función para obtener los productos y actualizar el estado
+    const findAll = async () => {
+        try {
+            const prods = await getProducts(); // Llama al servicio
+            setProducts(prods); // Actualiza el estado con los datos obtenidos
+        } catch (error) {
+            console.error('Error al cargar los productos:', error);
+        }
+    };
+
+    // Usa useEffect para cargar los datos al montar el componente
+    useEffect(() => {
+        findAll();
+    }, []);
+
+    return (
+        <div>
+            <h1>Lista de Productos</h1>
+            <ul>
+                {products.map((product) => (
+                    <li key={product.id}>
+                        {product.name} - {product.description} - ${product.price}
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+};
+
+export default ProductList;
+```
+Cuando el componente ProductList se renderiza, se realiza la petición al servidor. Si los datos se obtienen correctamente, se mostrarán en una lista.
