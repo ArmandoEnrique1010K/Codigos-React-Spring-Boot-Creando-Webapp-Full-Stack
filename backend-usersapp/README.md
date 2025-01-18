@@ -181,250 +181,470 @@ Si estás usando un IDE como **Visual Studio Code**, puedes facilitar la impleme
    - Selecciona **Add unimplemented methods** en el menú de **Quick Fix**.
    - Esto generará automáticamente los métodos no implementados en tu clase.
 
+## Ruta Dinámica en el Controlador
 
+El controlador `UserController` implementa rutas dinámicas que permiten interactuar con usuarios específicos según el ID proporcionado en la URL. A continuación, se detallan los aspectos clave y ejemplos prácticos de implementación.
+
+### 1. Ruta dinámica utilizando `@PathVariable`
+
+El método `show` mapea la ruta `GET /users/{id}` donde `{id}` es una variable dinámica que se extrae mediante la anotación `@PathVariable`.
+
+```java
+@RestController
+@RequestMapping("/users")
+public class UserController {
+
+    @Autowired
+    private UserService service;
+
+    @GetMapping("/{id}")
+    public User show(@PathVariable Long id) {
+        // orElseThrow -> Manejo directo de ausencia de datos.
+        return service.findById(id).orElseThrow(); 
+    }
+}
+
+
+```
+
+**Notas:**
+
+- Si no se encuentra el usuario, `orElseThrow()` lanza una excepción como `NoSuchElementException` por defecto.
+- Puedes personalizar la excepción si necesitas un mensaje específico o manejar un caso más particular.
+
+### 2. Utilizando `@PathVariable(name = "id")`
+
+Es posible especificar explícitamente el nombre del parámetro en la URL para evitar errores de coincidencia en rutas complejas o por convención.
+
+```java
+@GetMapping("/{id}")
+public User show(@PathVariable(name = "id") Long idUser) {
+    return service.findById(idUser).orElseThrow();
+}
+```
+
+Aunque no es obligatorio si el nombre coincide, esta práctica puede ser útil para aumentar la legibilidad del código.
+
+### 3. Devolver respuestas completas con `ResponseEntity`
+
+En lugar de devolver directamente un objeto `User`, puedes usar `ResponseEntity` para proporcionar una respuesta más robusta, incluyendo códigos de estado HTTP.
+
+```java
+@GetMapping("/{id}")
+public ResponseEntity<?> show(@PathVariable Long id) {
+    Optional<User> userOptional = service.findById(id);
+
+    if (userOptional.isPresent()) {
+        // HTTP 200 con el usuario encontrado.
+        return ResponseEntity.ok(userOptional.get()); 
+    }
+
+    // HTTP 404 si el usuario no existe.
+    return ResponseEntity.notFound().build(); 
+}
+```
+
+**Ventajas:**
+
+- **Mejor manejo de errores:** Devuelve códigos HTTP precisos (`200 OK`, `404 Not Found`).
+- **Flexibilidad:** Permite incluir cabeceras o modificar la respuesta.
+
+### **4. Configuración personalizada para errores (Opcional)**
+
+Puedes lanzar una excepción personalizada si el usuario no existe y manejarla globalmente en tu aplicación.
+
+```java
+public class UserNotFoundException extends RuntimeException {
+    public UserNotFoundException(String message) {
+        super(message);
+    }
+}
+```
+
+```java
+@GetMapping("/{id}")
+public User show(@PathVariable Long id) {
+    return service.findById(id).orElseThrow(() -> 
+        new UserNotFoundException("User not found with ID: " + id)
+    );
+}
+```
+
+## Método POST: Crear un Usuario
+
+El método POST en el controlador permite crear un nuevo usuario recibiendo un objeto `User` en el cuerpo de la petición. Este objeto se almacena en la base de datos utilizando el servicio correspondiente.
+
+### **1. Implementación básica con `@ResponseStatus`**
+
+En esta implementación, el método devuelve el usuario creado y utiliza la anotación `@ResponseStatus` para indicar un estado HTTP 201 (Created).
+
+```java
+@PostMapping
+@ResponseStatus(HttpStatus.CREATED) // Indica que el estado HTTP de la respuesta es 201.
+public User create(@RequestBody User user) {
+    return service.save(user); // Guarda el usuario en la base de datos y lo devuelve.
+}
+```
+
+**Ventajas:**
+
+- Simple y directo.
+- Estado HTTP 201 es automático gracias a `@ResponseStatus`.
+
+**Consideración:**
+
+- No permite incluir cabeceras adicionales ni personalizar más allá del cuerpo de la respuesta.
+
+### 2. Implementación avanzada con `ResponseEntity`
+
+Para una respuesta más personalizada, puedes usar `ResponseEntity`. Esto te permite controlar tanto el código de estado como el cuerpo y, opcionalmente, añadir cabeceras HTTP.
+
+```java
+@PostMapping
+public ResponseEntity<?> create(@RequestBody User user) {
+    // Guarda el usuario en la base de datos.
+    User userDb = service.save(user);
+
+    // Devuelve una respuesta con estado 201 y el usuario creado en el cuerpo.
+    return ResponseEntity.status(HttpStatus.CREATED).body(userDb);
+}
+```
+
+**Ventajas:**
+
+- Permite personalizar completamente la respuesta.
+- Más flexible si en el futuro necesitas añadir cabeceras o estados diferentes.
+
+## Actualizar un recurso existente en la base de datos (PUT)
+
+El método `update` busca un recurso en la base de datos por su identificador (`id`) y, si se encuentra, actualiza ciertos campos permitidos del objeto, como `username` y `email`. Si el recurso no existe, devuelve un error HTTP 404 (`Not Found`).
+
+```java
+@PutMapping("/{id}")
+public ResponseEntity<?> update(@RequestBody User user, @PathVariable Long id) {
+    // Busca el recurso en la base de datos
+    Optional<User> o = service.findById(id);
+
+    // Verifica si el recurso existe
+    if (o.isPresent()) {
+        User userDb = o.orElseThrow(); // Obtiene el usuario desde el Optional
+
+        // Actualiza solo los campos permitidos
+        userDb.setUsername(user.getUsername());
+        userDb.setEmail(user.getEmail());
+
+        // Guarda el recurso actualizado en la base de datos
+        User updatedUser = service.save(userDb);
+
+        // Devuelve una respuesta con el recurso actualizado
+        return ResponseEntity.ok(updatedUser); // HTTP 200 OK
+    }
+
+    // Devuelve un error 404 si el recurso no se encuentra
+    return ResponseEntity.notFound().build();
+}
+```
+
+#### **Notas importantes:**
+
+- Se utiliza `ResponseEntity.ok()` para devolver el recurso actualizado con un estado HTTP 200 (`OK`).
+- Solo los campos `username` y `email` se actualizan. Otros campos sensibles, como `password`, no se modifican por razones de seguridad.
+- Si el recurso no existe (`Optional.isPresent()` es falso), se devuelve un estado HTTP 404.
+
+### Eliminar un recurso existente en la base de datos (DELETE)
+
+El método `remove` elimina un recurso existente de la base de datos por su identificador (`id`). Si el recurso no existe, devuelve un error HTTP 404 (`Not Found`).
+
+```java
+@DeleteMapping("/{id}")
+public ResponseEntity<?> remove(@PathVariable Long id) {
+    // Busca el recurso en la base de datos
+    Optional<User> o = service.findById(id);
+
+    // Verifica si el recurso existe
+    if (o.isPresent()) {
+        // Elimina el recurso por su ID
+        service.remove(id);
+
+        // Devuelve una respuesta HTTP 204 (No Content) si se eliminó correctamente
+        return ResponseEntity.noContent().build();
+    }
+
+    // Devuelve un error 404 si el recurso no se encuentra
+    return ResponseEntity.notFound().build();
+}
+```
+
+#### **Notas importantes:**
+
+- El estado HTTP 204 (`No Content`) indica que el recurso fue eliminado correctamente y no hay contenido en la respuesta.
+- Si el recurso no existe, devuelve un estado HTTP 404 (`Not Found`).
+
+## Diferencia entre controlador y servicio
+
+La separación entre el controlador y el servicio es crucial para mantener un código limpio, modular y fácil de mantener. El objetivo principal del controlador es manejar solicitudes HTTP y delegar la lógica de negocio al servicio. Aquí explicamos las diferencias y cómo la refactorización propuesta mejora el diseño.
+
+| **Aspecto**                | **Controlador**                                                                                        | **Servicio**                                                                                                       |
+| -------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| **Responsabilidad**        | Manejar solicitudes HTTP, procesar parámetros de la ruta, cuerpo de la petición y preparar respuestas. | Encapsular la lógica de negocio, realizar operaciones con los datos y manejar la interacción con la base de datos. |
+| **Nivel de abstracción**   | Interactúa directamente con el cliente (interfaz pública de la API).                                   | Se centra en la lógica de negocio y las operaciones de datos (detrás de escena).                                   |
+| **Ejemplo de operaciones** | Validar datos de entrada, definir las rutas y devolver respuestas HTTP.                                | Consultar la base de datos, realizar cálculos, manejar reglas de negocio y coordinar transacciones.                |
+
+### Refactorización del método `update`
+
+#### Implementación en el Servicio (`UserService`)
+
+El servicio se encarga de toda la lógica relacionada con la actualización de un recurso, como buscar el usuario, verificar su existencia, actualizar los campos y guardar los cambios en la base de datos.
+
+```java
+@Override
+@Transactional
+public Optional<User> update(User user, Long id) {
+    // Busca el usuario por su ID
+    Optional<User> o = this.findById(id);
+
+    // Define el objeto para el resultado de la operación
+    User userOptional = null;
+
+    // Si el usuario existe, actualiza sus campos
+    if (o.isPresent()) {
+        User userDb = o.orElseThrow();
+        userDb.setUsername(user.getUsername());
+        userDb.setEmail(user.getEmail());
+
+        // Guarda los cambios y asigna el resultado
+        userOptional = this.save(userDb);
+    }
+
+    // Devuelve un Optional con el resultado
+    return Optional.ofNullable(userOptional);
+}
+
+```
+
+### Implementación en el Controlador
+
+El controlador simplemente llama al servicio y gestiona la respuesta HTTP, sin involucrarse en la lógica de negocio. Esto simplifica y limpia el código.
+
+```java
+@PutMapping("/{id}")
+public ResponseEntity<?> update(@RequestBody User user, @PathVariable Long id) {
+    // Llama al método `update` del servicio
+    Optional<User> o = service.update(user, id);
+
+    // Si el recurso se actualizó correctamente
+    if (o.isPresent()) {
+        // Devuelve el recurso actualizado con el estado HTTP 201 (Created)
+        return ResponseEntity.status(HttpStatus.CREATED).body(o.orElseThrow());
+    }
+
+    // Si no se encontró el recurso, devuelve un error 404
+    return ResponseEntity.notFound().build();
+}
+```
+
+## Pruebas iniciales
+
+Las pruebas iniciales en **Postman** son esenciales para verificar el correcto funcionamiento de los endpoints creados.
+
+### Preparación previa
+
+1. **Base de datos:**
+   
+   - Asegúrate de haber creado la base de datos en MySQL utilizando el nombre especificado en `application.properties`.
+   
+   - En MySQL Workbench, ejecuta el siguiente comando para verificar que la tabla está vacía:
+     
+     ```sql
+     SELECT * FROM db_users_springboot.users;
+     ```
+
+2. **Ejecuta el proyecto:**
+   
+   - Corre la aplicación Spring Boot. Por defecto, estará disponible en `http://localhost:8080`.
+
+### Pruebas en Postman
+
+#### **1. Prueba inicial del endpoint GET (/users)**
+
+- **Método:** GET
+
+- **Ruta:** `http://localhost:8080/users`
+
+- **Resultado esperado:** Un arreglo vacío si no hay usuarios creados.
+
+- **Respuesta esperada:**
+  
+  ```json
+  []
+  ```
+
+#### **2. Prueba del endpoint GET por ID (/users/{id})**
+
+- **Método:** GET
+
+- **Ruta:** `http://localhost:8080/users/1`
+
+- **Caso 1: Usuario no encontrado.**
+  
+  - **Resultado esperado:** Código HTTP 404 (`Not Found`)
+  - **Respuesta esperada:** Vacía.
+
+- **Caso 2: Usuario encontrado.**
+  
+  - Si existe un usuario con el ID `1`, devuelve los datos del usuario:
+    
+    ```json
+    {
+      "id": 1,
+      "username": "pepe",
+      "email": "pepe@correo.com",
+      "password": "12345"
+    }
+    ```
+
+#### **3. Prueba del endpoint POST (Crear usuario)**
+
+- **Método:** POST
+
+- **Ruta:** `http://localhost:8080/users`
+
+- **Body:**
+  
+  - Selecciona **Body > raw** y configura el tipo como **JSON**.
+  
+  - Envía un JSON con los datos del nuevo usuario:
+    
+    ```json
+    {
+      "username": "pepe",
+      "email": "pepe@correo.com",
+      "password": "12345"
+    }
+    ```
+
+- **Resultado esperado:**
+  
+  - Código HTTP 201 (`Created`).
+  
+  - Respuesta con el usuario creado (incluye el ID asignado):
+    
+    ```json
+    {
+      "id": 1,
+      "username": "pepe",
+      "email": "pepe@correo.com",
+      "password": "12345"
+    }
+    ```
+
+- **Verificación:**
+  
+  - En MySQL Workbench, ejecuta nuevamente:
+    
+    ```sql
+    SELECT * FROM db_users_springboot.users;
+    ```
+  
+  - Deberías ver el nuevo registro en la tabla.
+
+#### **4. Prueba del endpoint PUT (Actualizar usuario)**
+
+- **Método:** PUT
+
+- **Ruta:** `http://localhost:8080/users/1`
+
+- **Body:**
+  
+  - Envía un JSON sin incluir el campo `password`:
+    
+    ```json
+    {
+      "username": "pepe_updated",
+      "email": "pepe_updated@correo.com"
+    }
+    ```
+
+- **Caso 1: Usuario encontrado.**
+  
+  - **Resultado esperado:** Código HTTP 201 (`Created`).
+  
+  - **Respuesta esperada:** El usuario actualizado:
+    
+    ```json
+    {
+      "id": 1,
+      "username": "pepe_updated",
+      "email": "pepe_updated@correo.com",
+      "password": "12345"
+    }
+    ```
+  
+  - **Verificación:** Realiza una petición GET al mismo ID (`/users/1`) para confirmar los cambios.
+
+- **Caso 2: Usuario no encontrado.**
+  
+  - **Resultado esperado:** Código HTTP 404 (`Not Found`).
+  - **Respuesta esperada:** Vacía.
+
+#### **5. Prueba del endpoint DELETE (Eliminar usuario)**
+
+- **Método:** DELETE
+
+- **Ruta:** `http://localhost:8080/users/1`
+
+- **Body:** No envíes ningún cuerpo (vacío).
+
+- **Caso 1: Usuario encontrado.**
+  
+  - **Resultado esperado:** Código HTTP 204 (`No Content`).
+  - **Respuesta esperada:** Vacía.
+  - **Verificación:** Realiza una petición GET al mismo ID (`/users/1`) y debería devolver un código HTTP 404.
+
+- **Caso 2: Usuario no encontrado.**
+  
+  - **Resultado esperado:** Código HTTP 404 (`Not Found`).
+  - **Respuesta esperada:** Vacía.
+
+### **Puntos importantes**
+
+1. **Verificación en MySQL Workbench:**
+   
+   - Después de cada operación, verifica el estado de la tabla con:
+     
+     ```sql
+     SELECT * FROM db_users_springboot.users;
+     ```
+
+2. **Manejo de errores:**
+   
+   - Asegúrate de que las respuestas de error (`404 Not Found`) sean coherentes según lo esperado.
+
+3. **Tipos de datos en JSON:**
+   
+   - Utiliza cadenas de texto para los campos `username`, `email` y `password`.
+
+4. **Uso de ResponseEntity:**
+   
+   - Verifica que los códigos de estado HTTP (`201`, `404`, `204`) coincidan con lo definido en el controlador.
+
+### **Resultados esperados por escenario**
+
+| **Método** | **Ruta**   | **Entrada**                        | **Resultado esperado** |
+| ---------- | ---------- | ---------------------------------- | ---------------------- |
+| **GET**    | `/users`   | N/A                                | `[]`                   |
+| **GET**    | `/users/1` | N/A                                | 404 o el usuario       |
+| **POST**   | `/users`   | JSON con `username`, `email`, etc. | Usuario creado (201)   |
+| **PUT**    | `/users/1` | JSON con campos actualizados       | Usuario actualizado    |
+| **DELETE** | `/users/1` | N/A                                | 204 o 404              |
+
+Con estas pruebas iniciales, podrás validar que los endpoints funcionan según lo esperado y cumplen con las reglas de negocio establecidas.
 
 
 
 ---
 
-## Métodos CRUD automáticos
 
-Al momento de definir los atributos de una entidad, existe la anotación @Column(unique=true), para especificar que el valor sea unico en la base de datos
-
-Al extender `CrudRepository`, la interfaz `UserRepository` hereda varios métodos útiles para manejar operaciones CRUD, tales como:
-
-- **`save(S entity)`**: Guarda o actualiza una entidad.
-- **`findById(ID id)`**: Encuentra una entidad por su ID.
-- **`findAll()`**: Obtiene todas las entidades.
-- **`deleteById(ID id)`**: Elimina una entidad por su ID.
-
-Estos métodos son fundamentales para la implementación del CRUD en la aplicación React de usuarios, permitiendo operaciones como crear, modificar y eliminar usuarios.
-
-## La "magia" de JPA y Hibernate
-
-La implementación de estos métodos es posible gracias a la integración de JPA con Hibernate en Spring Data. Hibernate, como implementación de JPA, maneja automáticamente las operaciones CRUD mediante el uso de consultas SQL nativas. Esto se traduce al dialecto SQL configurado en tu archivo `application.properties`.
-
-Todo esto permite que las tablas de la base de datos y las consultas SQL sean manejadas a través de un mundo de programación orientada a objetos. ORM (Object-Relational Mapping), como Hibernate, permite mapear las tablas de la base de datos a clases y objetos en Java, facilitando el manejo de la persistencia de datos de manera eficiente y transparente.
-
-
-
-
-
-
-
-## Servicio
-
-Una forma eficiente de implementar estos métodos es utilizando un IDE, como VSCode. Puedes hacer clic derecho en el codigo, seleccionar la opción `Source Action...` > `Override/Implement Methods...`; o puedes colocar el cursor sobre `UserServiceImpl`, presionar `CTRL + .` (carácter punto) y seleccionar **Add unimplemented methods** en la sección de **Quick Fix** para lograr el mismo resultado.
-
-## Ruta dinamica en el controlador
-
-El método `show` se encuentra mapeado a la ruta `/users/{id}` mediante una petición de tipo `GET`. El `{id}` en la ruta es una variable que se pasa como argumento al método a través de la anotación `@PathVariable`. Esto permite que el método maneje solicitudes que buscan un usuario específico basado en su ID, devolviendo la respuesta correspondiente dependiendo de si el usuario existe o no.
-
-Se concatena el método `orElseThrow` a `findById` del servicio inyectado, en lugar de utilizar el método `get` (se encuentra algo obsoleto) para manejar el caso de que no exista el usuario.
-
-```java
-package com.andres.backend.usersapp.backend_usersapp.controllers;
-
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-
-import com.andres.backend.usersapp.backend_usersapp.models.entities.User;
-import com.andres.backend.usersapp.backend_usersapp.service.UserService;
-
-@RestController
-@RequestMapping("/users")
-public class UserController {
-
-    @Autowired
-    private UserService service;
-
-    @GetMapping
-    public List<User> list() {
-        return service.findAll();
-    }
-
-    // Mapea hacia la ruta dinamica hacia "/users/id"
-    @GetMapping("/{id}")
-    // Agrega la anotación PathVariable
-    public User show(@PathVariable Long id) {
-        // Concatena el método orElseThrow
-        return service.findById(id).orElseThrow();
-    }
-}
-```
-
-Opcionalmente puedes utilizar el atributo `name` dentro de `PathVariable` para especificar el nombre del parametro que viene en la ruta. Pero, por convesión se utiliza el mismo nombre del párametro en la definición del método para evitar la redundancia.
-
-`UserController.java`
-
-```java
-    @GetMapping("/{id}")    // Cambia el nombre de la variable de tipo Long a idUser
-    public User show(@PathVariable(name = "id") Long idUser) {        // Utiliza el valor de idUser
-        return service.findById(idUser).orElseThrow();    }
-```
-
-En lugar de devolver el `User` directamente, utiliza `ResponseEntity` para proporcionar una respuesta más completa. Si el usuario está presente en el `Optional`, devuelve un `ResponseEntity` con un estado HTTP 200 OK y el usuario en el cuerpo de la respuesta. Si no está presente, devuelve un estado HTTP 404 Not Found.
-
-```java
-package com.andres.backend.usersapp.backend_usersapp.controllers;
-
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-
-import com.andres.backend.usersapp.backend_usersapp.models.entities.User;
-import com.andres.backend.usersapp.backend_usersapp.service.UserService;
-
-@RestController
-@RequestMapping("/users")
-public class UserController {
-
-    @Autowired
-    private UserService service;
-
-    @GetMapping
-    public List<User> list() {
-        return service.findAll();
-    }
-
-    @GetMapping("/{id}")
-    // Utiliza ResponseEntity con un comodin <?> en lugar de User
-    public ResponseEntity<?> show(@PathVariable Long id) {
-        // Busca el usuario por ID, devuelve un Optional que puede o 
-        // no contener un User
-        Optional<User> userOptional = service.findById(id);
-
-        // Verifica si el usuario está presente en el Optional
-        if (userOptional.isPresent()){
-            // Si el usuario existe, devuelve una respuesta con el estado 
-            // HTTP 200 (OK) y el usuario en el cuerpo
-            return ResponseEntity.ok(userOptional.orElseThrow());
-        }
-
-        // Si el usuario no existe, devuelve una respuesta con el estado 
-        // HTTP 404 (Not Found)
-        return ResponseEntity.notFound().build();
-    }
-}
-```
-
-## Método POST
-
-Primero, define un método en el controlador que recibirá un objeto `User` en el cuerpo de la petición (`@RequestBody`). Este método utilizará el servicio para guardar el usuario en la base de datos y devolverá el objeto creado.
-
-Para devolver un estado HTTP 201 (Created) al crear un usuario, se utiliza la anotación `@ResponseStatus(HttpStatus.CREATED)`. Sin embargo, si prefieres una respuesta más personalizada, puedes usar `ResponseEntity` y eliminar la anotación `@ResponseStatus`.
-
-```java
-    @PostMapping
-    // Agrega la anotación ResponseStatus para devolver un estado 201
-    @ResponseStatus(HttpStatus.CREATED)
-    public User create(@RequestBody User user) {
-        return service.save(user);
-    }
-```
-
-En lugar de usar `@ResponseStatus`, puedes convertir el objeto `User` en una respuesta personalizada con `ResponseEntity`. Esto permite controlar el código de estado HTTP y el cuerpo de la respuesta en una sola línea:
-
-```java
-    @PostMapping
-    public ResponseEntity<?> create(@RequestBody User user) {
-        // La variable almacena el usuario guardado
-        User userDb = service.save(user)
-        // Utiliza la variable en el cuerpo de la respuesta
-        return ResponseEntity.status(HttpStatus.CREATED).body(userDb);
-    }
-```
-
-## Buscar un recurso existente en la base de datos
-
-Utiliza el servicio para buscar el recurso por su identificador (con el método `findById(id)`). Esto se realiza con un `Optional<User>`. Si el recurso no se encuentra, devuelve un `ResponseEntity.notFound().build()`. Si el recurso está presente, actualiza los campos necesarios. Solo actualiza los campos permitidos, como `username` y `email`. No modifiques el `password` si no es necesario.
-
-**Nota**: Se valida para verificar si el usuario esta presente (con el método `isPresent`), si existe se llama a userDb de la base de datos, pero como devuelve un optional nunca lanzara una excepcion porque siempre esta presente.
-
-```java
-    @PutMapping("/{id}")
-    public ResponseEntity<?> update(@RequestBody User user, @PathVariable Long id) {
-        // Busca el recurso en la base de datos
-        Optional<User> o = service.findById(id);
-
-        // Verifica si el recurso existe
-        if (o.isPresent()) {
-            // Lanza una excepción si el usuario no esta presente
-            User userDb = o.orElseThrow();
-            // Actualiza los campos del recurso
-            userDb.setUsername(user.getUsername());
-            userDb.setEmail(user.getEmail());
-        }
-        return null;
-    }
-```
-
-Guarda el recurso actualizado en la base de datos y retorna una respuesta `ResponseEntity` con el estado `HttpStatus.CREATED` (201) con el recurso actualizado.
-
-**Nota**: Por lo general, para las actualizaciones se suele usar `HttpStatus.OK` (200).
-
-Implementa la lógica para devolver un error 404 cuando el recurso no se encuentra, devolviendo un `ResponseEntity.notFound().build()`.
-
-```java
-    @PutMapping("/{id}")
-    public ResponseEntity<?> update(@RequestBody User user, @PathVariable Long id) {
-        // ...
-        Optional<User> o = service.findById(id);
-
-        if (o.isPresent()) {
-            User userDb = o.orElseThrow();
-            userDb.setUsername(user.getUsername());
-            userDb.setEmail(user.getEmail());
-            return ResponseEntity.status(HttpStatus.CREATED).body(service.save(userDb));
-        }
-
-        // Devuelve un error 404 si el recurso no se encuentra
-        return ResponseEntity.notFound().build();
-    }
-```
-
-## Método DELETE
-
-Para el metodo eliminar, debajo del metodo update se establce la anotación DeleteMapping, para mapearl a ruata al id, se define el id entre llaves en la ruta,
-
-Luego devuelve un ResponseEntity de tipo generic <?> llamado remove, una vez que se elimina por id no se pasa ningun objeto ni nada, solamente se va a aeliminar.
-
-Va a ser un path variable porque se pasa a lo cierto por la ruta @PathVariable de tipo Long id y las llaves.
-
-, luego se puede devolver la respuesta ResponseEntity.noContent porque no tiene contenido no va nada en el body .build para generar la respuesta
-
-Pero no se esta validando, si el usuario no existe por el id, ira a buscarlo en la base de datos y preguntara si esta presente.
-
-```java
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> remove(@PathVariable Long id) {
-        Optional<User> o = service.findById(id);
-
-        if (o.isPresent()) {
-            service.remove(id);
-            return ResponseEntity.noContent().build();
-        }
-
-        return ResponseEntity.notFound().build();
-    }
-```
-
-Solamente se busca en la base dadtos para validar si existe el usuario con el id, se obtiene si esta presente se elimina por su id mediante el service devolvemos la respuesta http response del tipo no content 204 build
-
-Luego y si no tiene esta presente devolvemos un response entity no bone build, es decir un 404 no encontrado.
 
 ## Diferencia entre controlador y servicio
 
