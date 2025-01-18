@@ -34,6 +34,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public List<UserDto> findAll() {
+        // Realiza un cast para convertir un iterable a list
         List<User> users = (List<User>) repository.findAll();
         return users
                 .stream()
@@ -42,6 +43,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    // Este metodo es de tipo lectura
     @Transactional(readOnly = true)
     public Optional<UserDto> findById(Long id) {
         return repository.findById(id).map(u -> DtoMapperUser
@@ -52,31 +54,45 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    // El metodo no es de tipo lectura, crea un nuevo usuario
     @Transactional
     public UserDto save(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRoles(getRoles( user));
+        user.setRoles(getRoles(user));
         return DtoMapperUser.builder().setUser(repository.save(user)).build();
     }
 
     @Override
     @Transactional
     public Optional<UserDto> update(UserRequest user, Long id) {
+        // Primero tiene que buscar al usuario por su ID en la base de datos
         Optional<User> o = repository.findById(id);
+
+        // Variable para el almacenar el usuario que se guardara
         User userOptional = null;
+
         if (o.isPresent()) {
+            // Establece el usuario en userDb
             User userDb = o.orElseThrow();
+
+            // Actualiza los campos segun los campos del objeto user recibido
             userDb.setRoles(getRoles(user));
             userDb.setUsername(user.getUsername());
             userDb.setEmail(user.getEmail());
+
+            // Guarda los cambios en la base de datos
             userOptional = repository.save(userDb);
         }
+
+        // En lugar del metodo empty, se utiliza ofNullable, en el caso de que pase el
+        // usuario lo devuelve, de lo contrario devuelve un null
         return Optional.ofNullable(DtoMapperUser.builder().setUser(userOptional).build());
     }
 
     @Override
     @Transactional
     public void remove(Long id) {
+        // El metodo deleteById elimina el usuario por su id
         repository.deleteById(id);
     }
 
