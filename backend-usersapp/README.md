@@ -42,7 +42,6 @@ public interface UserRepository extends CrudRepository<User, Long> {
     // Puedes agregar métodos personalizados si lo necesitas
     User findByUsername(String username);
 }
-
 ```
 
 ### Métodos CRUD Automáticos Disponibles
@@ -110,7 +109,6 @@ public interface UserService {
     // Métodos personalizados
     Optional<User> findByUsername(String username);
 }
-
 ```
 
 ### Implementación del Servicio
@@ -203,8 +201,6 @@ public class UserController {
         return service.findById(id).orElseThrow(); 
     }
 }
-
-
 ```
 
 **Notas:**
@@ -419,7 +415,6 @@ public Optional<User> update(User user, Long id) {
     // Devuelve un Optional con el resultado
     return Optional.ofNullable(userOptional);
 }
-
 ```
 
 ### Implementación en el Controlador
@@ -452,6 +447,19 @@ Las pruebas iniciales en **Postman** son esenciales para verificar el correcto f
 1. **Base de datos:**
    
    - Asegúrate de haber creado la base de datos en MySQL utilizando el nombre especificado en `application.properties`.
+     
+     ```properties
+     spring.datasource.url=jdbc:mysql://localhost:3306/db_users_springboot
+     spring.datasource.username=root
+     spring.datasource.password=admin
+     spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+     spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
+     spring.jpa.show-sql=true
+     
+     # TIP: primero ejecuta la aplicación y luego mientras se esta ejecutando, cambia create por update para mantener los datos
+     spring.jpa.hibernate.ddl-auto=create
+     logging.level.org.hibernate.SQL=debug
+     ```
    
    - En MySQL Workbench, ejecuta el siguiente comando para verificar que la tabla está vacía:
      
@@ -465,7 +473,7 @@ Las pruebas iniciales en **Postman** son esenciales para verificar el correcto f
 
 ### Pruebas en Postman
 
-#### **1. Prueba inicial del endpoint GET (/users)**
+#### 1. Prueba inicial del endpoint GET (/users)
 
 - **Método:** GET
 
@@ -479,7 +487,7 @@ Las pruebas iniciales en **Postman** son esenciales para verificar el correcto f
   []
   ```
 
-#### **2. Prueba del endpoint GET por ID (/users/{id})**
+#### 2. Prueba del endpoint GET por ID (/users/{id})
 
 - **Método:** GET
 
@@ -503,7 +511,7 @@ Las pruebas iniciales en **Postman** son esenciales para verificar el correcto f
     }
     ```
 
-#### **3. Prueba del endpoint POST (Crear usuario)**
+#### 3. Prueba del endpoint POST (Crear usuario)
 
 - **Método:** POST
 
@@ -548,7 +556,7 @@ Las pruebas iniciales en **Postman** son esenciales para verificar el correcto f
   
   - Deberías ver el nuevo registro en la tabla.
 
-#### **4. Prueba del endpoint PUT (Actualizar usuario)**
+#### 4. Prueba del endpoint PUT (Actualizar usuario)
 
 - **Método:** PUT
 
@@ -587,7 +595,7 @@ Las pruebas iniciales en **Postman** son esenciales para verificar el correcto f
   - **Resultado esperado:** Código HTTP 404 (`Not Found`).
   - **Respuesta esperada:** Vacía.
 
-#### **5. Prueba del endpoint DELETE (Eliminar usuario)**
+#### 5. Prueba del endpoint DELETE (Eliminar usuario)
 
 - **Método:** DELETE
 
@@ -606,7 +614,7 @@ Las pruebas iniciales en **Postman** son esenciales para verificar el correcto f
   - **Resultado esperado:** Código HTTP 404 (`Not Found`).
   - **Respuesta esperada:** Vacía.
 
-### **Puntos importantes**
+### Puntos importantes
 
 1. **Verificación en MySQL Workbench:**
    
@@ -628,7 +636,7 @@ Las pruebas iniciales en **Postman** son esenciales para verificar el correcto f
    
    - Verifica que los códigos de estado HTTP (`201`, `404`, `204`) coincidan con lo definido en el controlador.
 
-### **Resultados esperados por escenario**
+### Resultados esperados por escenario
 
 | **Método** | **Ruta**   | **Entrada**                        | **Resultado esperado** |
 | ---------- | ---------- | ---------------------------------- | ---------------------- |
@@ -640,128 +648,13 @@ Las pruebas iniciales en **Postman** son esenciales para verificar el correcto f
 
 Con estas pruebas iniciales, podrás validar que los endpoints funcionan según lo esperado y cumplen con las reglas de negocio establecidas.
 
+## Validaciones
+
+(CONTINUA AQUI)
+
 
 
 ---
-
-
-
-## Diferencia entre controlador y servicio
-
-Quizas en el emtodo update del controlador se maneja mucha logica de negocio y ese no es el objetivo del controlador, se podria llevar a un service, para aquello en el service se define un nuevo metodo en UserService, llamado update, se pasa los parametros User y el Id, esto puede devolver un Optional si viene o no viene,
-
-ofNullable pregunta si el valor es vacio si es vacio pregunta si es vacio si es nulo va a devolver un optional empty, si no un ofNulalbel con un userOptional
-
-En el controlador, se puede modificar llamadndo a service.update(user, id). Se elimina la definición dentro del if y solamente se retorna el objeto que se obtiene en el update.
-
-Si no existe el objeto no se hace ningun save ni void nil ogica de negocio,
-
-En el service queda mejor porque se separa update y create, en el update se actualiza con el objeto usuario, busca en la base de datos, se tien eun objeto de resultado uSEROptional, si esta presente se obtiene el usuairo de la base de datos y luego se guarda el userDb que viene de la base de datos con los datos del request que proviene del controlador y luego se guarda el userDb que viene de la base de datos con datos cambiados y se le asigna al resultado a userOptional y se devuelve como un posible Optional ya sea nullable o con un valor
-
-Esto se maneja en el controlador con el if si esta presente se crea, se obtiene el objeo de Optional con elsethrwon, queda más limpio el codigo, es una mejora.
-
-```java
-    @Override
-    @Transactional
-    public Optional<User> update(User user, Long id) {
-        Optional<User> o = this.findById(id);
-
-        User userOptional = null;
-
-        if (o.isPresent()) {
-            User userDb = o.orElseThrow();
-            userDb.setUsername(user.getUsername());
-            userDb.setEmail(user.getEmail());
-            userOptional = this.save(userDb);
-        }
-
-        return Optional.ofNullable(userOptional);
-    }
-```
-
-```java
-    @PutMapping("/{id}")
-    public ResponseEntity<?> update(@RequestBody User user, @PathVariable Long id) {
-        Optional<User> o = service.update(user, id);
-
-        if (o.isPresent()) {
-            return ResponseEntity.status(HttpStatus.CREATED).body(o.orElseThrow());
-        }
-
-        return ResponseEntity.notFound().build();
-    }
-```
-
-## Pruebas iniciales en POSTMAN
-
-Recuerda que primero debes crear la base de datos especificada el nombre en application.properties en MySQL WorkBench
-
-Al ejecutar la petición de tipo GET localhost:8080/users, lanza un arreglo vacio
-
-Al ejecutar la ruta por id localhost:8080/users/1, sabiendo que el usuario no existe, lanza un 404 not found, si esta presente devuelve el usuario
-
-Selecciona el metodo POST, la ruta es la raiz de users, ve a la pestaña Body del request, selecciona raw porque se enviara un JSON y selecciona la opcion JSON
-
-En el cuerpo se cola llaves y luego los atributos, en postaman los atributos se colocan con comillas, es un JSON
-
-```json
-{    "username": "pepe",    "email": "pepe@correo.com",    "password": "12345"
-}
-```
-
-Envia el JSON , se creara el usaurio con el id 1, se tiene un 201 Created
-
-Ve a MySQL Workbench, vuelve a ejecutar la linea SELECT * FROM db_users_springboot.users, se tendra 1 registro en la tabla
-
-![](assets/2025-01-18-16-51-28-image.png)
-
-Eñl metodo GET busca el usuario con el id 4 mediante la ruta localhost:8080/users/4, puede buscar cualquier usuario
-
-Cualquier usuario que no exite mostrar Not Found,
-
-Cambia a petición de tipo PUT, segun el controlador, lleva el id, en este caso el usuario con el id 4
-
-Envia un JSON sin la propiedad password.
-
-```json
-{    "username": "daniela2000",    "email": "daniela2000@correo.com"
-}
-```
-
-Al enviarlo devuelve el usuario pero modificado, se mantiene el id pero los valores en los campos han cambiado
-
-Una forma de revisar es realizar una petición de tipo GET a la misma ruta y mostrara el usuario modificado
-
-Al intentar modificar un usuario que no existe, devolvera un 404 Not Found
-
-![](assets/2025-01-18-16-52-30-image.png)
-
-```json
-{
-    "username": "daniela2000",
-    "email": "daniela2000@correo.com"
-}
-```
-
-![](assets/2025-01-18-16-52-50-image.png)
-
-Para eliminar el usuario se utiliza el tipo DELETE, y se envia el id, en este caso el id 5, en la ruta localhost:8080/5
-
-En body no se coloca nada porque no lleva
-
-Segun el controlador, el delefte solamente busca el id si esta presente lo elimina,m no recibe nada porque no hay un requestBody,
-
-En postman los enpoints que llevan @RequestBody es cuando se utiliza la opción de body, sección raw.
-
-Al enviar la petición no se recibe nada y se tiene 204 No Content.
-
-Segun el controlador si esta bien lo elimina, de lo contrario un No Content
-
-Para comprobarlo puedes realizaru na petición GET a la ruta
-
-y se tendra NotFound
-
-NO se encuentra, al listar todos los usuarios tampoco se van a mostrar
 
 ## DTO
 

@@ -29,6 +29,9 @@ import jakarta.validation.Valid;
 @RestController
 // Establece que todas las rutas empiecen con "/users"
 @RequestMapping("/users")
+
+// No olvidar la configuración de CORS, en este caso cualquier cliente puede
+// acceder a la API
 @CrossOrigin(originPatterns = "*")
 public class UserController {
 
