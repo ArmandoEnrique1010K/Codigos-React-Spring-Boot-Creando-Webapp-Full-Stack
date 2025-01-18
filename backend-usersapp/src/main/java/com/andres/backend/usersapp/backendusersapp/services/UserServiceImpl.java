@@ -31,6 +31,7 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    // Metodo para obtener una lista de usuarios (tipo lectura)
     @Override
     @Transactional(readOnly = true)
     public List<UserDto> findAll() {
@@ -42,8 +43,8 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    // Este metodo tambien es de tipo lectura (obtiene un usuario por su id)
     @Override
-    // Este metodo es de tipo lectura
     @Transactional(readOnly = true)
     public Optional<UserDto> findById(Long id) {
         return repository.findById(id).map(u -> DtoMapperUser
@@ -53,8 +54,8 @@ public class UserServiceImpl implements UserService {
 
     }
 
-    @Override
     // El metodo no es de tipo lectura, crea un nuevo usuario
+    @Override
     @Transactional
     public UserDto save(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -62,6 +63,7 @@ public class UserServiceImpl implements UserService {
         return DtoMapperUser.builder().setUser(repository.save(user)).build();
     }
 
+    // Actualiza el usuario por su id, requiere los datos que se van a sobreescribir
     @Override
     @Transactional
     public Optional<UserDto> update(UserRequest user, Long id) {
@@ -89,6 +91,7 @@ public class UserServiceImpl implements UserService {
         return Optional.ofNullable(DtoMapperUser.builder().setUser(userOptional).build());
     }
 
+    // Metodo para borrar al usuario de la base de datos
     @Override
     @Transactional
     public void remove(Long id) {
