@@ -438,6 +438,94 @@ public ResponseEntity<?> update(@RequestBody User user, @PathVariable Long id) {
 }
 ```
 
+## Diferencia entre repository y this en el servicio
+
+### 1. Usar `repository` directamente
+
+Cuando usas `repository` en la capa de servicio, estás accediendo directamente a los métodos del repositorio (que son proporcionados por Spring Data JPA, como `save`, `findById`, `deleteById`, etc.). Esto es lo más común en la mayoría de los casos.
+
+```java
+@Service
+public class UserService {
+
+    @Autowired
+    private UserRepository repository;
+
+    public User save(User user) {
+        return repository.save(user);
+    }
+}
+```
+
+**Ventajas:**
+
+- **Claro y explícito:** Es evidente que el repositorio está gestionando la interacción con la base de datos.
+- **Control preciso:** Puedes usar los métodos del repositorio directamente y, si es necesario, añadir consultas personalizadas (`@Query`).
+
+**Desventajas:**
+
+- Si necesitas lógica adicional antes de guardar o recuperar un dato, debes implementarla manualmente en el servicio.
+
+### 2. Usar `this` dentro de la misma clase
+
+Cuando usas `this` en la capa de servicio, estás llamando a un método definido en la misma clase. Esto puede incluir llamadas indirectas a los métodos del repositorio, pero no interactúas directamente con él.
+
+```java
+@Service
+public class UserService {
+
+    @Autowired
+    private UserRepository repository;
+
+    public User save(User user) {
+        // Llama a otro método de la misma clase
+        return this.processAndSave(user);
+    }
+
+    private User processAndSave(User user) {
+        // Agrega lógica adicional antes de guardar
+        user.setUsername(user.getUsername().toLowerCase());
+        return repository.save(user);
+    }
+}
+```
+
+**Ventajas:**
+
+- **Encapsulación:** Puedes envolver la lógica de negocio antes de llamar al repositorio.
+- **Reutilización interna:** Es útil cuando necesitas separar la lógica en métodos pequeños dentro de la misma clase.
+
+**Desventajas:**
+
+- Si necesitas proxy dinámico (como transacciones), `this` no lo aplicará automáticamente porque Spring no intercepta llamadas internas de la misma clase.
+
+### **3. Usar `this` vs. `repository` con transacciones**
+
+Un caso importante a considerar es cuando se trabaja con transacciones (`@Transactional`). Spring usa proxies dinámicos para manejar las transacciones, pero **las llamadas internas a métodos dentro de la misma clase** (usando `this`) no serán interceptadas por el proxy, y la transacción no funcionará como esperas.
+
+```java
+@Service
+public class UserService {
+
+    @Autowired
+    private UserRepository repository;
+
+    @Transactional
+    public void performOperation() {
+        // Esto será transaccional
+        this.save(new User());
+    }
+
+    @Transactional
+    public User save(User user) {
+        // Esto NO será transaccional si se llama desde otro método usando `this`
+        return repository.save(user);
+    }
+}
+```
+
+En este caso, **si usas `repository` directamente o llamas al método desde fuera de la clase (por ejemplo, desde el controlador), el proxy sí aplicará la transacción**.
+
 ## Pruebas iniciales
 
 Las pruebas iniciales en **Postman** son esenciales para verificar el correcto funcionamiento de los endpoints creados.
@@ -648,11 +736,259 @@ Las pruebas iniciales en **Postman** son esenciales para verificar el correcto f
 
 Con estas pruebas iniciales, podrás validar que los endpoints funcionan según lo esperado y cumplen con las reglas de negocio establecidas.
 
+---
+
 ## Validaciones
 
+En el código mostrado, se implementan validaciones en los campos de la clase `User` para garantizar que los datos sean correctos antes de persistirlos en la base de datos.
+
+### 1. Dependencia para Validación
+
+La dependencia `spring-boot-starter-validation` añade soporte para el marco de validación de Java Bean Validation, que está basado en las especificaciones **Jakarta Validation** (anteriormente Javax). Esto incluye un conjunto estándar de anotaciones como `@NotNull`, `@NotEmpty`, `@Size`, entre otras, para validar los datos de entrada.
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-validation</artifactId>
+</dependency>
+```
+
+### 2. Validaciones Implementadas
+
+#### @NotBlank
+
+- Valida que un campo de tipo `String` no sea `null`, esté vacío, ni contenga solo espacios en blanco.
+
+#### @Size
+
+- Restringe la longitud de una cadena (o el tamaño de una colección).
+
+```java
+@NotBlank
+@Size(min = 4, max = 8)
+private String username;
+```
+
+#### @NotEmpty
+
+- Valida que un campo no sea `null` ni una cadena vacía (`""`).
+- Es menos estricta que `@NotBlank` porque permite cadenas con espacios en blanco.
+
+```java
+@NotEmpty
+private String password;
+```
+
+#### **@Email**
+
+- Valida que el campo contenga un formato válido de dirección de correo electrónico.
+- Debe ser usado junto con `@NotEmpty` para evitar valores `null` o cadenas vacías.
+
+#### **@Column(unique = true)**
+
+- Define que el valor del campo debe ser único en la base de datos.
+
+```java
+@Email
+@NotEmpty
+@Column(unique = true)
+private String email;
+```
+
+### 3. Personalización de mensajes de error
+
+Puedes personalizar los mensajes de validación usando el atributo `message` en las anotaciones. Por ejemplo:
+
+```java
+@NotBlank(message = "El nombre de usuario no puede estar vacío ni contener solo espacios en blanco.")
+@Size(min = 4, max = 8, message = "El nombre de usuario debe tener entre 4 y 8 caracteres.")
+private String username;
+```
+
+Si la validación falla, este mensaje personalizado será incluido en la respuesta de error.
+
+### 4. Manejo de Errores en el Controlador
+
+Para que las validaciones se activen, agrega la anotación `@Valid` en el controlador, en los métodos donde se recibe un `@RequestBody`.
+
+- **`@Valid`:** Activa las validaciones definidas en la entidad.
+- **`BindingResult`:** Captura los errores de validación, que luego puedes procesar para generar una respuesta clara.
+
+```java
+@PostMapping
+public ResponseEntity<?> create(@Valid @RequestBody User user, BindingResult result) {
+    if (result.hasErrors()) {
+        List<String> errors = result.getFieldErrors()
+                                    .stream()
+                                    .map(err -> "El campo '" + err.getField() + "' " + err.getDefaultMessage())
+                                    .collect(Collectors.toList());
+        return ResponseEntity.badRequest().body(errors);
+    }
+
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.save(user));
+}
+```
+
+### 5. Ejemplo de Respuesta de Error en JSON
+
+Si intentas crear un usuario con un correo inválido o un nombre de usuario vacío, obtendrás una respuesta similar a esta:
+
+```java
+[
+    "El campo 'username' El nombre de usuario no puede estar vacío ni contener solo espacios en blanco.",
+    "El campo 'email' debe ser una dirección de correo electrónico válida."
+]
+
+```
+
+### 6. Beneficios de Usar Validaciones
+
+- **Prevención de datos inválidos:** Evita errores a nivel de base de datos y mejora la calidad de los datos almacenados.
+- **Respuestas claras:** Proporciona retroalimentación inmediata al usuario sobre problemas con los datos enviados.
+- **Centralización de reglas:** Las reglas de validación están definidas directamente en la entidad, asegurando consistencia en toda la aplicación.
+
+## El controlador
+
+
+
+## Capa de request
+
+
+
+json
+
+CopiarEditar
+
+java
+
+CopiarEditar
+
+
+
+
+
+java
+
+CopiarEditar
+
+
+
+Puedes ir al archivo pom.xml, haz clic derercho, selecciona Add Starters, se abrirla el cuadro de dialogo para añadir dependencias.
+
+Añade la dependencia Validation
+
+Otra forma es ir al buscador, seleccionar Show and Run comands, seleccion Spring initalizr: add starters..., realiza la misma acción para agregar dependencias.
+
+Pulsa Enter y aparecera un cuadro de dialogo solicitando que si se quiere añadir las dependencias. Clic en Proceed
+
+
+
+En el archivo pom.xml se tendra la dependencia
+
+```xml
+<!-- -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+<!-- -->
+```
+
+### NotEmpty
+
+Primero ve a la clase enetity, los campos que se llenan username, password y email se puede añadir validaciones como @NotEmpty, inicialmente no lo encuentra, es una anotacion para validar los campos que no sean vacios, campos de tipo String.
+
+NOta: se utiliza NotEmpty de jakarta.validation no de org.hibernate.validator porque esta deprecado.
+
+Si se quiere validar algo que no es un stirng ocmo un numero o un objeto se utiliza @NotNull,
+
+@NotBlank es parecido a NotEmpty, la difernecia es que empty este vacio, acepta espacios en blanco, notblank valida que un string no tenga un espacio en blanco.
+
+Utiliza @NotBlack en la campo username, por defecto, los mensajes de idioma de error es automatico segun el lenguaje, zona horaria, se puede personalizar el mensaje de error, el atributo message de la anotación se puede colocar una mensaje.
+
+Se tiene la anotación @Size de jakarta.validation, el tamaño que puede tener, tienes sus atributos max y min para especificar la cantidad de caracteres,
+
+Tambien se tiene las anotacionse @Max y @Min pero solamente es para números, BigDecimal, Long, Int, no soporta Double ni Float.
+
+Se establece un maximo y un minimo
+
+Tambien se tiene @Digits para validar que sea un digito
+
+Más información en la documentación
+
+```java
+package com.andres.backend.usersapp.backend_usersapp.models.entities;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
+
+@Entity
+@Table(name = "users")
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank
+    // Agrega la anotación Size con los atributos min y max
+    @Size(min = 4, max = 8)
+    @Column(unique = true)
+    private String username;
+
+    @NotEmpty
+    private String password;
+
+    @Email
+    @NotEmpty
+    @Column(unique = true)
+    private String email;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+}
+```
+
+
+
 (CONTINUA AQUI)
-
-
 
 ---
 

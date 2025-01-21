@@ -28,7 +28,9 @@ public class User implements IUser {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Valida que el campo no este vacio ni contenga espacios en blanco
     @NotBlank
+    // Valida que el tamaño del username sea entre 4 y 8 caracteres
     @Size(min = 4, max = 8)
     // El atributo unique = true asegura que no se repitan registros en la tabla
     @Column(unique = true)
@@ -37,7 +39,9 @@ public class User implements IUser {
     @NotBlank
     private String password;
 
+    // Valida que el campo no sea null, ni tenga una cadena vacia
     @NotEmpty
+    // Valida que el campo contenga un formato valido de direccion de correo
     @Email
     @Column(unique = true)
     private String email;
