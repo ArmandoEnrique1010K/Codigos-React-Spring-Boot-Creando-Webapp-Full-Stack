@@ -28,6 +28,7 @@ import com.andres.backend.usersapp.backendusersapp.auth.filters.JwtValidationFil
 @Configuration
 public class SpringSecurityConfig {
 
+    // Inyección de dependencia de la configuración de autenticación
     @Autowired
     private AuthenticationConfiguration authenticationConfiguration;
 
@@ -62,7 +63,10 @@ public class SpringSecurityConfig {
 
                         // Requerir autenticación para cualquier otra solicitud
                         .anyRequest().authenticated())
+
+                // Añade el filtro JWT con el AuthenticationManager
                 .addFilter(new JwtAuthenticationFilter(authenticationConfiguration.getAuthenticationManager()))
+
                 .addFilter(new JwtValidationFilter(authenticationConfiguration.getAuthenticationManager()))
 
                 // Deshabilitar CSRF, ya que no se utiliza en APIs RESTful

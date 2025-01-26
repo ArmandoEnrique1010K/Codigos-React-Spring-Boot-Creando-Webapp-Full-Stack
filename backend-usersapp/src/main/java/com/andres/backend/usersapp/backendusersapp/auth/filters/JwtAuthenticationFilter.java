@@ -56,6 +56,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             password = user.getPassword();
 
             // Logging de debug
+            // Estan comentados porque se muestran en la consola luego de iniciar sesion
             // logger.info("Username desde request InputStream (raw) " + username);
             // logger.info("Password desde request InputStream (raw) " + password);
 

@@ -1333,6 +1333,369 @@ protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServle
 
 4. **Códigos de estado**: Ya estás utilizando el código de estado `401` para indicar que la autenticación ha fallado, lo cual es correcto.
 
+## Configurando filtros en SpringSecurityConfig
+
+La configuración del filtro `JwtAuthenticationFilter` en la clase `SpringSecurityConfig` es crucial para integrar el filtro de autenticación JWT en la cadena de seguridad de Spring. 
+
+Esta es la forma correcta de inyectar el `AuthenticationManager` mediante `AuthenticationConfiguration` para pasar al filtro `JwtAuthenticationFilter`.
+
+El filtro `JwtAuthenticationFilter` se agrega a la cadena de filtros utilizando `addFilter()`. Al filtro se le pasa el `AuthenticationManager` obtenido desde `authenticationConfiguration.getAuthenticationManager()`.
+
+```java
+package com.andres.backend.usersapp.backend_usersapp.auth;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+
+import com.andres.backend.usersapp.backend_usersapp.auth.filters.JwtAuthenticationFilter;
+
+@Configuration
+public class SpringSecurityConfig {
+
+    // Inyectamos AuthenticationConfiguration para obtener el AuthenticationManager
+    @Autowired
+    private AuthenticationConfiguration authenticationConfiguration;
+
+    @Bean
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http.authorizeHttpRequests(
+                    .requestMatchers(HttpMethod.GET, "/users").permitAll()
+                    .anyRequest().authenticated()
+                ).
+                // Añade el filtro JWT con el AuthenticationManager
+                .addFilter(new JwtAuthenticationFilter(authenticationConfiguration.getAuthenticationManager()))
+                .csrf(config -> config.disable())
+                .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .build();
+    }
+}
+
+
+```
+
+## El servicio de autenticación
+
+La clase `JpaUserDetailsService` implementa la interfaz `UserDetailsService`, la cual es clave en Spring Security para la autenticación. Este servicio es responsable de cargar los detalles del usuario, como el nombre de usuario, la contraseña, y los roles/autoridades asociadas.
+
+<img src="assets/2025-01-26-12-31-02-image.png" title="" alt="" data-align="center">
+
+En este caso la clase `JpaUserDetailsService` simula un proceso de autenticación con un usuario ficticio. Esta clase maneja la carga de usuario por nombre de usuario y, en caso de que el usuario no exista, lanza una excepción `UsernameNotFoundException`.
+
+```java
+package com.andres.backend.usersapp.backend_usersapp.services;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
+// No olvidar la anotación Service
+@Service
+// Esta clase implementa la interfaz UserDeatilsService
+public class JpaUserDetailsService implements UserDetailsService {
+
+    // Este metodo sirve para cargar el usuario por su nombre de usuario
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        // Simula la verificación si el usuario existe (en este caso, solo "admin")
+        if (!username.equals("admin")) {
+            throw new UsernameNotFoundException(String.format("Username %s no existe en el sistema", username));
+        }
+
+        // Si el usuario existe (en este caso, "admin"), se crea una lista de autoridades
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        
+        // Se agrega el rol de usuario al conjunto de autoridades
+        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+
+        // Devuelve un nuevo objeto User con las credenciales del usuario ficticio
+        // El primer true indica si el usuario está habilitado, el segundo true es si la cuenta no expira,
+        // el tercer true es si las credenciales no expiran y el cuarto true es si no está bloqueado.
+        return new User(username, "12345", true, true, true, true, authorities);
+    }
+}
+```
+
+### Resumen
+
+1. **`loadUserByUsername(String username)`**:
+   
+   - **Chequeo del Usuario**: Primero, se verifica si el nombre de usuario proporcionado es "admin". Si no lo es, lanza una excepción `UsernameNotFoundException`.
+   - **Creación de Autoridades**: Si el usuario es "admin", se crea una lista de autoridades (roles). En este caso, el rol asignado es `ROLE_USER`. En Spring Security, los roles siempre deben tener el prefijo `ROLE_`.
+   - **Creación de un Usuario**: Luego, se crea un objeto `User` de Spring Security, que implementa la interfaz `UserDetails`. Este objeto contiene:
+     - **`username`**: El nombre de usuario.
+     - **`password`**: La contraseña (en este ejemplo, "12345").
+     - **`enabled`**: Si el usuario está habilitado (`true`).
+     - **`accountNonExpired`**: Si la cuenta no ha expirado (`true`).
+     - **`credentialsNonExpired`**: Si las credenciales no han expirado (`true`).
+     - **`accountNonLocked`**: Si la cuenta no está bloqueada (`true`).
+     - **`authorities`**: Los roles o permisos del usuario, en este caso, solo `ROLE_USER`.
+
+2. **Lanzamiento de la Excepción `UsernameNotFoundException`**:
+   
+   - Si el nombre de usuario proporcionado no es "admin", se lanza una excepción con un mensaje indicando que el usuario no existe.
+
+## Password Encoder
+
+Para configurar correctamente el `PasswordEncoder` en Spring Security y simular el proceso de autenticación con contraseñas no encriptadas (usando `NoOpPasswordEncoder` para pruebas), sigue estos pasos:
+
+### 1. Configuración del `PasswordEncoder`
+
+En la clase `SpringSecurityConfig`, utiliza un `@Bean` para el `PasswordEncoder`. Usamos `NoOpPasswordEncoder` que no realiza ninguna encriptación (es útil solo para pruebas):
+
+```java
+package com.andres.backend.usersapp.backend_usersapp.auth;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+
+import com.andres.backend.usersapp.backend_usersapp.auth.filters.JwtAuthenticationFilter;
+
+@Configuration
+public class SpringSecurityConfig {
+
+    @Autowired
+    private AuthenticationConfiguration authenticationConfiguration;
+
+    // Configuración del PasswordEncoder
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return NoOpPasswordEncoder.getInstance();  // Utilizado solo para pruebas, no seguro para producción
+    }
+
+    @Bean
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http.authorizeHttpRequests()
+                .requestMatchers(HttpMethod.GET, "/users").permitAll()
+                .anyRequest().authenticated()
+                .and()
+                .addFilter(new JwtAuthenticationFilter(authenticationConfiguration.getAuthenticationManager()))
+                .csrf(config -> config.disable())
+                .sessionManagement(managment -> managment.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .build();
+    }
+}
+
+```
+
+### 2. Realizar la Prueba en Postman
+
+Una vez que hayas configurado el `PasswordEncoder` y el servicio de autenticación, puedes probar la autenticación utilizando Postman. Para hacer esto, realiza una solicitud `POST` con los siguientes parámetros:
+
+```json
+{
+    "username": "admin",
+    "password": "12345"
+}
+```
+
+**Respuesta Esperada**:
+
+Si el usuario y la contraseña son correctos, deberías obtener una respuesta que contiene un token de autenticación y un mensaje indicando que la autenticación fue exitosa.
+
+```json
+{
+    "message": "Hola admin, has iniciado sesión con éxito",
+    "token": "YWxndW5fdG9rZW5fY29uX2FsZ3VuYV9mcmFzZV9TZWNyZXRhLmFkbWlu",
+    "username": "admin"
+}
+```
+
+El token en la respuesta es una cadena base64 que puedes decodificar para obtener información sobre el usuario autenticado.
+
+Si el nombre de usuario no existe o la contraseña es incorrecta, recibirás un mensaje de error:
+
+```json
+{
+    "error": "error en la autenticación, username o password incorrecto",
+    "message": "bad credentials"
+}
+```
+
+#### Notas adicionales
+
+- El `NoOpPasswordEncoder` se utiliza exclusivamente para pruebas, ya que no encripta la contraseña. Esto es útil en situaciones de desarrollo, pero **nunca debe usarse en producción**. En un entorno de producción, deberías usar un `PasswordEncoder` seguro, como `BCryptPasswordEncoder`, que encripta las contraseñas.
+- Cuando se haga la transición a un `PasswordEncoder` más seguro, la contraseña en la base de datos también debe ser cifrada de acuerdo con el nuevo algoritmo.
+
+### 3. Uso de BCryptPasswordEncoder
+
+Ahora, en lugar de usar `NoOpPasswordEncoder`, se utiliza `BCryptPasswordEncoder` para encriptar las contraseñas de forma segura. Por otro lado se añade un `@Bean` para exponer el `AuthenticationManager`, necesario para la autenticación en el filtro JWT.
+
+```java
+package com.andres.backend.usersapp.backend_usersapp.auth;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+
+import com.andres.backend.usersapp.backend_usersapp.auth.filters.JwtAuthenticationFilter;
+
+@Configuration
+public class SpringSecurityConfig {
+
+    @Autowired
+    private AuthenticationConfiguration authenticationConfiguration;
+
+    // Configuración del PasswordEncoder con BCrypt
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(); // Encriptación segura para contraseñas
+    }
+
+    // Configuración del AuthenticationManager
+    @Bean
+    AuthenticationManager authenticationManager() throws Exception {
+        return authenticationConfiguration.getAuthenticationManager(); // Retorna el AuthenticationManager
+    }
+
+    // Configuración del SecurityFilterChain
+    @Bean
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http.authorizeHttpRequests()
+                .requestMatchers(HttpMethod.GET, "/users").permitAll() // Permite acceso sin autenticación a /users
+                .anyRequest().authenticated() // Requiere autenticación para cualquier otra solicitud
+                .and()
+                .addFilter(new JwtAuthenticationFilter(authenticationConfiguration.getAuthenticationManager())) // Filtro JWT
+                .csrf(config -> config.disable()) // Desactiva CSRF
+                .sessionManagement(managment -> managment.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Sin estado
+                .build();
+    }
+}
+
+```
+
+La contraseña de ejemplo está encriptada con `BCrypt` y almacenada como `$2a$10$DOMDxjYyfZ/e7RcBfUpzqeaCs8pLgcizuiQWXPkU35nOhZlFcE9MS`, que corresponde a "12345" después de haber sido encriptada con `BCryptPasswordEncoder`.
+
+```java
+package com.andres.backend.usersapp.backend_usersapp.services;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+@Service
+public class JpaUserDetailsService implements UserDetailsService {
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        if (!username.equals("admin")) {
+            throw new UsernameNotFoundException(String.format("Username %s no existe en el sistema", username));
+        }
+
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+
+        return new User(username,
+                // Puedes cambiar esta contraseña por otra
+                "$2a$10$DOMDxjYyfZ/e7RcBfUpzqeaCs8pLgcizuiQWXPkU35nOhZlFcE9MS",
+                true,
+                true,
+                true,
+                true,
+                authorities);
+    }
+
+}
+```
+
+Puedes ir a la siguiente página para generar una contraseña encriptada y comprobar el valor desencriptado de la contraseña: https://bcrypt-generator.com/
+
+Cuando se haga el login, la contraseña ingresada (`12345`) será comparada con la contraseña encriptada almacenada en la base de datos, utilizando `BCrypt` para realizar la comparación de manera segura.
+
+## Implementando Filtro para validar el token JwtValidationFilter
+
+Para implementar el filtro `JwtValidationFilter`, que se encarga de validar el token JWT en las cabeceras de la solicitud, se siguen varios pasos. Este filtro permite que solo se pueda acceder a recursos protegidos si el token JWT enviado es válido.
+
+### Crear la clase `JwtValidationFilter`
+
+Primero, se extiende de `BasicAuthenticationFilter`, que es una clase de Spring Security que proporciona la funcionalidad básica de autenticación. Este filtro se ejecuta en cada solicitud.
+
+<img src="assets/2025-01-26-13-45-02-image.png" title="" alt="" data-align="center">
+
+```java
+package com.andres.backend.usersapp.backend_usersapp.auth.filters;
+
+import java.io.IOException;
+
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+public class JwtValidationFilter extends BasicAuthenticationFilter {
+
+    public JwtValidationFilter(AuthenticationManager authenticationManager) {
+        super(authenticationManager);  // Llamada al constructor de BasicAuthenticationFilter
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+
+        String header = request.getHeader("Authorization");  // Obtiene el header Authorization
+
+        if (header == null || !header.startsWith("Bearer ")) {  // Verifica si el header es null o no empieza con "Bearer "
+            chain.doFilter(request, response);  // Si no es válido, continúa con el siguiente filtro
+            return;
+        }
+
+        String token = header.replace("Bearer ", "");  // Elimina el prefijo "Bearer " para obtener el token puro
+
+        // Aquí se implementará la lógica para validar el token y establecer la autenticación si es válido
+        // Esto se hará más adelante, después de la validación del token.
+
+        chain.doFilter(request, response);  // Continúa con el siguiente filtro
+    }
+}
+
+```
+
+### Explicación del código
+
+1. **Constructor**:
+   - Recibe el `AuthenticationManager` como parámetro y lo pasa al constructor de la clase `BasicAuthenticationFilter`. Esto es necesario para que el filtro pueda trabajar con la autenticación de Spring Security.
+2. **Método `doFilterInternal`**:
+   - **Obtención del Header**: Se obtiene el header `Authorization` de la solicitud. Si no está presente o no empieza con "Bearer ", el filtro se salta y permite que la solicitud continúe sin realizar validaciones adicionales.
+   - **Validación del Token**: Si el header está presente y es válido, se elimina la palabra "Bearer " del comienzo para extraer solo el token.
+   - **Continuación del Filtro**: Se llama a `chain.doFilter(request, response)` para permitir que la solicitud continúe con los siguientes filtros de la cadena.
+
 
 
 
