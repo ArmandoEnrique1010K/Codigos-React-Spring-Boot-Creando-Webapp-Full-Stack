@@ -1093,50 +1093,251 @@ public class SpringSecurityConfig {
 
 ## Creación y Configuración del Filtro de Autenticación con JWT en Spring Security
 
-- **¿Por qué crear un filtro personalizado?**
-  
-  Spring Security, por defecto, usa un formulario HTML para autenticación en aplicaciones monolíticas (MVC). Sin embargo, en una API REST, la autenticación debe realizarse enviando el `username` y `password` en un cuerpo JSON mediante una solicitud `POST`.
+### 1. ¿Por qué crear un filtro personalizado?
 
-- **Creación del filtro personalizado**
-  
-  - Crea un paquete `filters` dentro del paquete `auth`.
-  - Dentro de este paquete, crea la clase `JwtAuthenticationFilter`.
+Spring Security, por defecto, usa un formulario HTML para autenticación en aplicaciones monolíticas (MVC). Sin embargo, en una API REST, la autenticación debe realizarse enviando el `username` y `password` en un cuerpo JSON mediante una solicitud `POST`.
 
-- **Extender el filtro predeterminado**
-  
-  - La clase debe extender `UsernamePasswordAuthenticationFilter`, que es el filtro predeterminado de Spring para autenticación.
-  - Implementa los siguientes métodos clave:
-    - `attemptAuthentication`: Para intentar autenticar al usuario.
-    - `successfulAuthentication`: Llamado cuando la autenticación es exitosa (se generará el JWT aquí).
-    - `unsuccessfulAuthentication`: Llamado cuando la autenticación falla (devuelve un error 403 con un mensaje al cliente).
+### 2. Creación del filtro personalizado
 
-- **Constructor personalizado**
+- Crea un paquete `filters` dentro del paquete `auth`.
+- Dentro de este paquete, crea la clase `JwtAuthenticationFilter`.
+
+<img src="assets/2025-01-26-11-30-09-image.png" title="" alt="" data-align="center">
+
+### 3. Extender el filtro predeterminado
+
+- La clase debe extender `UsernamePasswordAuthenticationFilter`, que es el filtro predeterminado de Spring para autenticación.
+
+- Implementa los siguientes métodos clave:
   
-  - Añade un atributo `AuthenticationManager` en la clase para delegar la autenticación.
+  - `attemptAuthentication`: Para intentar autenticar al usuario.
   
-  - Define un constructor para inyectar el `AuthenticationManager`:
-    
-    ```java
-    private AuthenticationManager authenticationManager;
-    
-    public JwtAuthenticationFilter(AuthenticationManager authenticationManager) {
-        this.authenticationManager = authenticationManager;
+  - `successfulAuthentication`: Llamado cuando la autenticación es exitosa (se generará el JWT aquí).
+  
+  - `unsuccessfulAuthentication`: Llamado cuando la autenticación falla (devuelve un error 403 con un mensaje al cliente).
+
+- En VSCode puedes hacer clic derecho en el codigo, selecciona `Source Action`, opción `Override/Implement Methods` y marca los metodos claves mencionados anteriormente.
+
+<img src="assets/2025-01-26-11-36-47-image.png" title="" alt="" data-align="center">
+
+#### 3.1. Constructor personalizado
+
+- Añade un atributo `AuthenticationManager` en la clase para delegar la autenticación.
+
+- Define un constructor para inyectar el `AuthenticationManager`
+  
+  ```java
+  private AuthenticationManager authenticationManager;
+  
+  public JwtAuthenticationFilter(AuthenticationManager authenticationManager) {
+     this.authenticationManager = authenticationManager;
+  }
+  ```
+
+#### 3.2. Implementación de los métodos clave
+
+- **`attemptAuthentication`**
+  Este método intentará autenticar al usuario.
+  - Inicialmente, se devuelve una llamada a `authenticationManager.authenticate(null)`. Más adelante, se pasará un token de autenticación válido (como `UsernamePasswordAuthenticationToken`) con los datos enviados en la solicitud.
+- **`successfulAuthentication`**
+  Cuando la autenticación sea exitosa, este método:
+  - Generará un token JWT.
+  - Enviará el token como respuesta al cliente junto con los datos del usuario autenticado.
+- **`unsuccessfulAuthentication`**
+  Este método manejará los errores de autenticación:
+  - Devuelve un código HTTP 403 Forbidden.
+  - Proporciona un mensaje con detalles sobre el error.
+
+## Implementando el método attemptAuthenticación
+
+```java
+    @Override
+    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
+            throws AuthenticationException {
+        User user = null;
+        String username = null;
+        String password = null;
+
+        try {
+            // Convertir el cuerpo del request JSON a la entidad User
+            user = new ObjectMapper().readValue(request.getInputStream(), User.class);
+            username = user.getUsername();
+            password = user.getPassword();
+
+            // Logging de debug
+            logger.info("Username recibido: " + username);
+            logger.info("Password recibido: " + password);
+
+            // Se puede concatenar varios catch para manejar las excepciones
+        } catch (IOException e) {
+            logger.error("Error al procesar los datos de autenticación: " + e.getMessage());
+            throw new RuntimeException("Error al leer los datos de autenticación", e);
+        }
+
+        // Crear el token de autenticación
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, password);
+
+        // Enviar el token al AuthenticationManager para que valide las credenciales
+        return authenticationManager.authenticate(authToken);
     }
-    ```
+```
 
-- **Implementación de los métodos clave**
-  
-  - **`attemptAuthentication`**:  
-    Este método intentará autenticar al usuario.
-    - Inicialmente, se devuelve una llamada a `authenticationManager.authenticate(null)`. Más adelante, se pasará un token de autenticación válido (como `UsernamePasswordAuthenticationToken`) con los datos enviados en la solicitud.
-  - **`successfulAuthentication`**:  
-    Cuando la autenticación sea exitosa, este método:
-    - Generará un token JWT.
-    - Enviará el token como respuesta al cliente junto con los datos del usuario autenticado.
-  - **`unsuccessfulAuthentication`**:  
-    Este método manejará los errores de autenticación:
-    - Devuelve un código HTTP 403 Forbidden.
-    - Proporciona un mensaje con detalles sobre el error.
+### Resumen
+
+- **Deserialización del `request`**
+  Usamos `ObjectMapper` para convertir el cuerpo del `request` en un objeto `User`. Esto es necesario porque el cliente envía los datos en formato JSON.
+
+- **Creación del token de autenticación**
+  Creamos un `UsernamePasswordAuthenticationToken` con el `username` y `password` extraídos. Este token será enviado al `AuthenticationManager` para que valide las credenciales.
+
+### Generar un bloque try-catch
+
+Luego de llamar al constructor `ObjectMapper`, obligatoriamente solicitara que ObjectMapper debe estar dentro un bloque try-catch. 
+
+Para generar el bloque try-catch, coloca el cursor sobre `ObjectMapper` y selecciona `Quick Fix`, selecciona `Surround with try/catch` y el codigo contenido en el metodo se anida con try y catch.
+
+```java
+    @Override
+    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
+            throws AuthenticationException {
+        User user = null;
+        String username = null;
+        String password = null;
+
+        user = new ObjectMapper().readValue(request.getInputStream(), User.class);
+        return authenticationManager.authenticate(null);
+    }
+```
+
+Se anidan varios bloques catch de forma automatica para manejar los errores que podrian ocurrir.
+
+```java
+    @Override
+    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
+            throws AuthenticationException {
+        User user = null;
+        String username = null;
+        String password = null;
+
+        try {
+            user = new ObjectMapper().readValue(request.getInputStream(), User.class);
+        } catch (StreamReadException e) {
+            e.printStackTrace();
+        } catch (DatabindException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return authenticationManager.authenticate(null);
+    }
+```
+
+## Implementando el metodo successfulAuthentication
+
+```java
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import java.util.Date;
+
+// ...
+
+@Override
+protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
+        Authentication authResult) throws IOException, ServletException {
+    
+    // Obtiene el nombre de usuario del resultado de la autenticación
+    String username = ((org.springframework.security.core.userdetails.User) authResult.getPrincipal())
+            .getUsername();
+
+    String secretKey = "MiClaveSecreta"; // Usar una clave secreta de manera segura
+
+    // Generar un JWT real
+    String jwtToken = Jwts.builder()
+            .setSubject(username)
+            .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // Expira en 24 horas
+            .signWith(SignatureAlgorithm.HS256, secretKey)
+            .compact();
+
+    // Añadir el token en el header Authorization
+    response.addHeader("Authorization", "Bearer " + token);
+
+    // Crear el cuerpo de la respuesta en formato JSON
+    Map<String, Object> body = new HashMap<>();
+    body.put("token", token);
+    body.put("message", String.format("Hola %s, has iniciado sesión con éxito", username));
+    body.put("username", username);
+
+    // Escribir el cuerpo en la respuesta con un código de estado 200
+    response.getWriter().write(new ObjectMapper().writeValueAsString(body));
+    response.setStatus(200);
+    response.setContentType("application/json");
+}
+```
+
+### Resumen
+
+La implementación del método `successfulAuthentication` en la clase `JwtAuthenticationFilter` parece estar en el camino correcto. Sin embargo, hay algunos detalles adicionales que podrías considerar para mejorar la gestión del flujo y asegurar que el token JWT sea más robusto.
+
+1. **Generación del JWT**:
+   
+   - La forma en que estás generando el token usando Base64 es adecuada para fines de demostración, pero el estándar JWT generalmente incluye una firma (usando un algoritmo como HMAC o RSA) para verificar la autenticidad del token. Se recomienda usar una librería especializada como **jjwt** o **java-jwt** que proporciona una forma más estándar de crear y validar tokens JWT.
+   - Si decides seguir con Base64, asegúrate de que la estructura del token sea válida, generalmente tiene tres partes: encabezado, cuerpo (payload) y firma, separados por puntos (`.`).
+
+2. **Manejo de excepciones**:
+   
+   - Aunque manejas las excepciones al leer el JSON en el método `attemptAuthentication`, sería conveniente agregar un manejo de excepciones adecuado para el flujo completo, en especial en el método `successfulAuthentication`. Por ejemplo, si algo falla al agregar el token al header o escribir el cuerpo de la respuesta.
+
+3. **Respuesta de JSON**:
+   
+   - El `response.setStatus(200)` es adecuado para indicar éxito. Sin embargo, para una mayor claridad y consistencia con las mejores prácticas, puedes manejar los posibles errores de autenticación (en el método `unsuccessfulAuthentication`) de manera que el cliente reciba respuestas adecuadas en caso de fallos, como un código de estado 401 para autenticación fallida.
+
+4. **Uso de un Secret Key**:
+   
+   - En un JWT real, el secreto utilizado para firmar y verificar el token debe ser gestionado de manera segura (nunca lo pongas directamente en el código, usa un archivo de configuración o un servicio de gestión de secretos).
+
+## Implemetando el método unsuccessfulAuthentication
+
+```java
+@Override
+protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
+        AuthenticationException failed) throws IOException, ServletException {
+
+    // Crear un mapa para la respuesta
+    Map<String, Object> body = new HashMap<>();
+    
+    // Mensaje genérico de error
+    body.put("message", "Error en la autenticación, usuario o contraseña incorrectos");
+    
+    // Se puede agregar un error específico solo para los registros, no para el cliente
+    // Se comenta esta línea para evitar enviar detalles del error
+    // body.put("error", failed.getMessage());
+    
+    // Escribir el cuerpo de la respuesta como JSON
+    response.getWriter().write(new ObjectMapper().writeValueAsString(body));
+    
+    // Establecer el código de estado como 401 (No autorizado)
+    response.setStatus(401);
+    
+    // Establecer el tipo de contenido de la respuesta como JSON
+    response.setContentType("application/json");
+}
+```
+
+### Resumen
+
+1. **Mensaje de error general**: Es importante mantener el mensaje de error genérico y no dar demasiada información sobre la causa del fallo (por ejemplo, si es un error de contraseña incorrecta o un nombre de usuario incorrecto). En tu implementación, el mensaje `"Error en la autenticación username o password incorrecto"` es adecuado, pero asegúrate de que no se revelen detalles sobre si es el nombre de usuario o la contraseña lo que está incorrecto.
+
+2. **Incluir el mensaje de error específico**: La propiedad `failed.getMessage()` proporciona detalles específicos del error que ocurrió durante la autenticación. Esta es una buena práctica para mantener el registro del error en el lado del servidor, pero **no la incluyas en el cuerpo de la respuesta** que se enviará al cliente, ya que podría proporcionar más detalles de los necesarios.
+
+3. **Estructura del JSON de error**: El `body` debería contener campos como `message` y `error` (por ejemplo, el mensaje genérico de error y una descripción corta del fallo). Esto ayuda al cliente a procesar la respuesta correctamente.
+
+4. **Códigos de estado**: Ya estás utilizando el código de estado `401` para indicar que la autenticación ha fallado, lo cual es correcto.
+
+
+
+
+
+
 
 ---
 
