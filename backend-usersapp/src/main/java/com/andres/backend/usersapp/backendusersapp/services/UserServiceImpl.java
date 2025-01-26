@@ -64,6 +64,9 @@ public class UserServiceImpl implements UserService {
     }
 
     // Actualiza el usuario por su id, requiere los datos que se van a sobreescribir
+
+    // Observa que se utiliza UserRequest en lugar de User, pues en el controlador
+    // llama a esta función requiriendo un objeto de tipo UserRequest
     @Override
     @Transactional
     public Optional<UserDto> update(UserRequest user, Long id) {
@@ -81,6 +84,8 @@ public class UserServiceImpl implements UserService {
             userDb.setRoles(getRoles(user));
             userDb.setUsername(user.getUsername());
             userDb.setEmail(user.getEmail());
+
+            // Observa que se omite el campo password
 
             // Guarda los cambios en la base de datos
             userOptional = repository.save(userDb);

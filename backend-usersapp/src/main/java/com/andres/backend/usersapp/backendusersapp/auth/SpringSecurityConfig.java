@@ -23,6 +23,8 @@ import org.springframework.web.filter.CorsFilter;
 import com.andres.backend.usersapp.backendusersapp.auth.filters.JwtAuthenticationFilter;
 import com.andres.backend.usersapp.backendusersapp.auth.filters.JwtValidationFilter;
 
+// Anotación para la configuración de la seguridad
+// Se importa de org.springframework.context...
 @Configuration
 public class SpringSecurityConfig {
 
@@ -39,22 +41,39 @@ public class SpringSecurityConfig {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
+    // Bean almacena el metodo como un componente de Spring (similar a @Service)
     @Bean
+    // Metodo para configurar las reglas de autenticación y autorización
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http.authorizeHttpRequests()
-                .requestMatchers(HttpMethod.GET, "/users").permitAll()
-                .requestMatchers(HttpMethod.GET, "/users/{id}").hasAnyRole("USER", "ADMIN")
-                .requestMatchers(HttpMethod.POST, "/users").hasRole("ADMIN")
-                .requestMatchers("/users/**").hasRole("ADMIN")
-                // .requestMatchers(HttpMethod.DELETE, "/users/{id}").hasRole("ADMIN")
-                // .requestMatchers(HttpMethod.PUT, "/users/{id}").hasRole("ADMIN")
-                .anyRequest().authenticated()
-                .and()
+        return http
+                // Configuración de reglas de autorización
+                .authorizeHttpRequests(authorize -> authorize
+                        // Permitir acceso público solo para solicitudes GET a "/users"
+                        .requestMatchers(HttpMethod.GET, "/users").permitAll()
+
+                        .requestMatchers(HttpMethod.GET, "/users/{id}").hasAnyRole("USER", "ADMIN")
+
+                        .requestMatchers(HttpMethod.POST, "/users").hasRole("ADMIN")
+
+                        .requestMatchers("/users/**").hasRole("ADMIN")
+
+                        // .requestMatchers(HttpMethod.DELETE, "/users/{id}").hasRole("ADMIN")
+                        // .requestMatchers(HttpMethod.PUT, "/users/{id}").hasRole("ADMIN")
+
+                        // Requerir autenticación para cualquier otra solicitud
+                        .anyRequest().authenticated())
                 .addFilter(new JwtAuthenticationFilter(authenticationConfiguration.getAuthenticationManager()))
                 .addFilter(new JwtValidationFilter(authenticationConfiguration.getAuthenticationManager()))
-                .csrf(config -> config.disable())
+
+                // Deshabilitar CSRF, ya que no se utiliza en APIs RESTful
+                .csrf(csrf -> csrf.disable())
+
+                // Configuración para manejar sesiones sin estado (stateless)
                 .sessionManagement(managment -> managment.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+                // Construir y devolver la configuración de seguridad
                 .build();
     }
 

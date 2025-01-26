@@ -736,8 +736,6 @@ Las pruebas iniciales en **Postman** son esenciales para verificar el correcto f
 
 Con estas pruebas iniciales, podrás validar que los endpoints funcionan según lo esperado y cumplen con las reglas de negocio establecidas.
 
----
-
 ## Validaciones
 
 En el código mostrado, se implementan validaciones en los campos de la clase `User` para garantizar que los datos sean correctos antes de persistirlos en la base de datos.
@@ -817,7 +815,9 @@ Para que las validaciones se activen, agrega la anotación `@Valid` en el contro
 ```java
 @PostMapping
 public ResponseEntity<?> create(@Valid @RequestBody User user, BindingResult result) {
+    // Verifica si hay errores en la validación
     if (result.hasErrors()) {
+        // Se crea un List que contendrá los mensajes de validación
         List<String> errors = result.getFieldErrors()
                                     .stream()
                                     .map(err -> "El campo '" + err.getField() + "' " + err.getDefaultMessage())
@@ -838,7 +838,6 @@ Si intentas crear un usuario con un correo inválido o un nombre de usuario vac�
     "El campo 'username' El nombre de usuario no puede estar vacío ni contener solo espacios en blanco.",
     "El campo 'email' debe ser una dirección de correo electrónico válida."
 ]
-
 ```
 
 ### 6. Beneficios de Usar Validaciones
@@ -847,151 +846,302 @@ Si intentas crear un usuario con un correo inválido o un nombre de usuario vac�
 - **Respuestas claras:** Proporciona retroalimentación inmediata al usuario sobre problemas con los datos enviados.
 - **Centralización de reglas:** Las reglas de validación están definidas directamente en la entidad, asegurando consistencia en toda la aplicación.
 
-## El controlador
+## Validación reutilizable
 
+El siguiente método encapsula la lógica para manejar errores de validación y se invoca siempre que los datos recibidos no cumplan con las reglas definidas en las anotaciones de validación (`@NotBlank`, `@Email`, etc.).
 
+### **1. Método `validation`**
 
-## Capa de request
-
-
-
-json
-
-CopiarEditar
-
-java
-
-CopiarEditar
-
-
-
-
-
-java
-
-CopiarEditar
-
-
-
-Puedes ir al archivo pom.xml, haz clic derercho, selecciona Add Starters, se abrirla el cuadro de dialogo para añadir dependencias.
-
-Añade la dependencia Validation
-
-Otra forma es ir al buscador, seleccionar Show and Run comands, seleccion Spring initalizr: add starters..., realiza la misma acción para agregar dependencias.
-
-Pulsa Enter y aparecera un cuadro de dialogo solicitando que si se quiere añadir las dependencias. Clic en Proceed
-
-
-
-En el archivo pom.xml se tendra la dependencia
-
-```xml
-<!-- -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
-        </dependency>
-<!-- -->
-```
-
-### NotEmpty
-
-Primero ve a la clase enetity, los campos que se llenan username, password y email se puede añadir validaciones como @NotEmpty, inicialmente no lo encuentra, es una anotacion para validar los campos que no sean vacios, campos de tipo String.
-
-NOta: se utiliza NotEmpty de jakarta.validation no de org.hibernate.validator porque esta deprecado.
-
-Si se quiere validar algo que no es un stirng ocmo un numero o un objeto se utiliza @NotNull,
-
-@NotBlank es parecido a NotEmpty, la difernecia es que empty este vacio, acepta espacios en blanco, notblank valida que un string no tenga un espacio en blanco.
-
-Utiliza @NotBlack en la campo username, por defecto, los mensajes de idioma de error es automatico segun el lenguaje, zona horaria, se puede personalizar el mensaje de error, el atributo message de la anotación se puede colocar una mensaje.
-
-Se tiene la anotación @Size de jakarta.validation, el tamaño que puede tener, tienes sus atributos max y min para especificar la cantidad de caracteres,
-
-Tambien se tiene las anotacionse @Max y @Min pero solamente es para números, BigDecimal, Long, Int, no soporta Double ni Float.
-
-Se establece un maximo y un minimo
-
-Tambien se tiene @Digits para validar que sea un digito
-
-Más información en la documentación
+- **Entrada:** Un objeto `BindingResult`, que contiene los errores de validación detectados.
+- **Salida:** Una respuesta HTTP 400 (Bad Request) con un cuerpo JSON que detalla los errores.
 
 ```java
-package com.andres.backend.usersapp.backend_usersapp.models.entities;
+private ResponseEntity<?> validation(BindingResult result) {
+    // Se utiliza un Map, la diferencia es que un map contiene pares de llave y valor
+    Map<String, String> errors = new HashMap<>();
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Size;
+    // Obtiene los mensajes de errores y realiza una iteración
+    // En errors se almacena un Map que contiene el nombre del campo y el mensaje de error relacionado al campo
+    result.getFieldErrors().forEach(err -> {
+        // getField() -> Obtiene el nombre del campo
+        // getDefaultMessage() -> el mensaje de error
+        errors.put(err.getField(), "El campo " + err.getField() + " " + err.getDefaultMessage());
+    });
 
-@Entity
-@Table(name = "users")
-public class User {
+    return ResponseEntity.badRequest().body(errors);
+}
+```
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+### Ventajas
 
+- Centraliza el manejo de errores, reduciendo duplicación de código.
+- Genera un mensaje de error claro y estructurado para el cliente.
+- Simplifica la lógica en los controladores.
+
+## 2. Uso de la clase `UserRequest` en lugar de `User`
+
+Se introduce una clase `UserRequest` para manejar peticiones que no necesitan todas las propiedades de la entidad `User`. Esto mejora la separación de responsabilidades y evita exponer la estructura completa de la entidad al cliente.
+
+### Diferencias clave
+
+- **Clase `User`:** Representa la entidad persistente en la base de datos.
+- **Clase `UserRequest`:** Representa el cuerpo de una petición HTTP para actualizar un usuario. Solo incluye los campos necesarios (`username`, `email` y `admin`).
+
+```java
+public class UserRequest implements IUser {
     @NotBlank
-    // Agrega la anotación Size con los atributos min y max
     @Size(min = 4, max = 8)
-    @Column(unique = true)
     private String username;
 
-    @NotEmpty
-    private String password;
+    // Se omite el campo password
 
-    @Email
     @NotEmpty
-    @Column(unique = true)
+    @Email
     private String email;
 
-    public Long getId() {
-        return id;
+    private boolean admin;
+    // Getters y Setters...
+}
+```
+
+### Beneficios
+
+- Protege la entidad `User` de manipulaciones innecesarias o inseguras.
+- Hace que las peticiones sean más claras y específicas para su propósito.
+
+## 3. Actualización de usuarios con validación
+
+En el servicio (`service.update`), se realiza la lógica de actualización, utilizando un **mapeador** para convertir un `UserRequest` en una entidad `User`.
+
+```java
+public Optional<UserDto> update(UserRequest userRequest, Long id) {
+    return repository.findById(id).map(user -> {
+        user.setUsername(userRequest.getUsername());
+        user.setEmail(userRequest.getEmail());
+        user.setAdmin(userRequest.isAdmin());
+        repository.save(user);
+        return mapper.toDto(user); // Convierte la entidad actualizada en un DTO
+    });
+}
+```
+
+El controlador utiliza `@Valid` para activar las validaciones definidas en `UserRequest` al recibir una solicitud. Si las validaciones fallan, se llama al método `validation`.
+
+```java
+@PutMapping("/{id}")
+public ResponseEntity<?> update(@Valid @RequestBody UserRequest user, BindingResult result, @PathVariable Long id) {
+    if (result.hasErrors()) {
+        return validation(result);
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    Optional<UserDto> o = service.update(user, id);
+
+    if (o.isPresent()) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(o.orElseThrow());
     }
 
-    public String getUsername() {
-        return username;
-    }
+    return ResponseEntity.notFound().build();
+}
+```
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+**Nota**: Se tiene en cuenta que el método `validation` se encuentre definido en el mismo controlador que contiene los endpoints.
 
-    public String getPassword() {
-        return password;
-    }
+## Spring Security
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+**Spring Security** es un marco de trabajo que permite implementar seguridad en aplicaciones basadas en Java. Al usar **JWT (JSON Web Tokens)**, se puede garantizar la autenticación y autorización de usuarios de forma eficiente en aplicaciones **API REST**.
 
-    public String getEmail() {
-        return email;
-    }
+### Características clave de JWT
 
-    public void setEmail(String email) {
-        this.email = email;
+1. **Estandarizado:** Basado en la especificación RFC 7519, permite interoperabilidad entre aplicaciones cliente y servidor.
+2. **Autenticación sin estado:** No requiere almacenar sesiones en el servidor, haciendo que sea más escalable.
+3. **Compacto y ligero:** Gracias a su tamaño reducido, se transmite fácilmente en cabeceras HTTP.
+4. **Autónomo:** Contiene toda la información necesaria sobre el usuario, como el username y roles, pero no información sensible (como contraseñas).
+5. **Seguro:** Se firma con una llave secreta para garantizar autenticidad, pero **no está encriptado**, solo codificado en Base64, por lo que puede ser leído.
+
+### Proceso de autenticación:
+
+1. El cliente envía un **username** y **password** al backend a través de un endpoint (ejemplo: `/login`).
+2. Spring Security valida las credenciales contra la base de datos.
+   - Si no son válidas: retorna un error `401 Unauthorized`.
+   - Si son válidas:
+     - Genera un JWT firmado con una llave secreta.
+     - Envía el JWT al cliente en la respuesta (`200 OK`).
+3. El cliente almacena el token en el **localStorage** o **sessionStorage** para futuras solicitudes.
+
+<img src="assets/2025-01-26-09-56-13-image.png" title="" alt="" data-align="center">
+
+### Acceso a recursos protegidos:
+
+1. El cliente incluye el JWT en las cabeceras HTTP (`Authorization: Bearer <token>`).
+2. Spring Security intercepta la solicitud con un filtro:
+   - Verifica la firma y validez del token (expiración, manipulación).
+   - Extrae los datos del usuario (username y roles).
+3. Según los roles del usuario, se otorgan o deniegan los permisos:
+   - Si no tiene permisos: retorna un error `403 Forbidden`.
+   - Si tiene permisos: accede al recurso y devuelve la información (`200 OK`).
+
+<img src="assets/2025-01-26-09-56-54-image.png" title="" alt="" data-align="center">
+
+### Ventajas del uso de JWT con Spring Security
+
+- **Escalabilidad:** No depende de sesiones almacenadas en el servidor.
+- **Integración:** Funciona con cualquier cliente (React, Angular, backend de otros microservicios).
+- **Optimización:** Reducción de consultas al servidor, ya que la información necesaria está en el token.
+
+### Consideraciones de seguridad
+
+- Nunca almacenar datos sensibles (contraseñas, información financiera) en el JWT.
+- Usar HTTPS para proteger la transmisión del token.
+- Configurar adecuadamente la expiración del token para mitigar riesgos.
+
+Este modelo permite implementar una solución segura, eficiente y desacoplada para gestionar la autenticación en aplicaciones modernas basadas en APIs REST.
+
+## Configuración de Spring Security para una API RESTful
+
+Para implementar Spring Security en la API, sigue estos pasos:
+
+### 1. Dependencia de Spring Security
+
+Agrega la dependencia de Spring Security en el archivo `pom.xml`. Recuerda que en VSCode puedes pulsar la tecla `F1`, escribir en el buscador `> Spring Initializr: Add Starters...` y selecciona la dependencia de **Spring Security**.
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+```
+
+Por defecto, al iniciar la aplicación, Spring Security bloquea todas las rutas y genera una contraseña temporal para desarrollo (la contraseña se puede ver en la consola).
+
+### 2. Clase SpringSecurityConfig
+
+Crea una clase de configuración (en este caso `SpringSecurityConfig`) dentro de un paquete `auth`.
+
+<img src="assets/2025-01-26-10-06-28-image.png" title="" alt="" data-align="center">
+
+Agrega la anotación `@Configuration` en la clase. Define un método `filterChain` anotado con `@Bean` para configurar las reglas de seguridad.
+
+```java
+package com.andres.backend.usersapp.backend_usersapp.auth;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+
+
+// Anotación para la configuración de la seguridad
+// Se importa de org.springframework.context...
+@Configuration
+public class SpringSecurityConfig {
+
+    // Bean almacena el metodo como un componente de Spring (similar a @Service)
+    @Bean
+    // Metodo para configurar las reglas de autenticación y autorización
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http
+                // Configuración de reglas de autorización
+                .authorizeHttpRequests(
+                    // Permitir acceso público solo para solicitudes GET a "/users"
+                    .requestMatchers(HttpMethod.GET, "/users").permitAll()
+                    // Requerir autenticación para cualquier otra solicitud
+                    .anyRequest().authenticated()
+                )
+                // Deshabilitar CSRF, ya que no se utiliza en APIs RESTful
+                .csrf(csrf -> csrf.disable())
+                // Configuración para manejar sesiones sin estado (stateless)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // Construir y devolver la configuración de seguridad
+                .build();
     }
 }
 ```
 
+### 3. Resumen de configuración
 
+1. **Reglas de autorización**
+   
+   - Usa `authorizeHttpRequests()` para definir qué rutas están permitidas y cuáles requieren autenticación:
+   - Permite solicitudes GET a `/users` con `.requestMatchers(HttpMethod.GET, "/users").permitAll()`.
+   - Requiere autenticación para cualquier otra ruta con `.anyRequest().authenticated()`.
 
-(CONTINUA AQUI)
+2. **CSRF deshabilitado**
+   
+   - Deshabilita **Cross-Site Request Forgery (CSRF)** con `.csrf(csrf -> csrf.disable())`.
+   - CSRF se utiliza en aplicaciones monolíticas con formularios, pero no es necesario en APIs RESTful.
+
+3. **Sesión sin estado (stateless)**
+   
+   - Configura el manejo de sesiones con `.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))`
+     
+     - Esto asegura que la API no use sesiones HTTP persistentes.
+     - En su lugar, la autenticación se manejará mediante un token JWT enviado con cada solicitud.
+
+### 4. Pruebas con Postman
+
+1. **GET /users**
+   
+   - Debería devolver la lista de usuarios sin problemas (siempre que el controlador correspondiente esté configurado correctamente).
+
+2. **GET /users/1**, **POST /users**, o **DELETE /users/1**
+   
+   - Responderá con `403 Forbidden`, ya que no hay un token JWT configurado para manejar la autenticación.
+
+<img src="assets/2025-01-26-11-19-44-image.png" title="" alt="" data-align="center">
+
+## Creación y Configuración del Filtro de Autenticación con JWT en Spring Security
+
+- **¿Por qué crear un filtro personalizado?**
+  
+  Spring Security, por defecto, usa un formulario HTML para autenticación en aplicaciones monolíticas (MVC). Sin embargo, en una API REST, la autenticación debe realizarse enviando el `username` y `password` en un cuerpo JSON mediante una solicitud `POST`.
+
+- **Creación del filtro personalizado**
+  
+  - Crea un paquete `filters` dentro del paquete `auth`.
+  - Dentro de este paquete, crea la clase `JwtAuthenticationFilter`.
+
+- **Extender el filtro predeterminado**
+  
+  - La clase debe extender `UsernamePasswordAuthenticationFilter`, que es el filtro predeterminado de Spring para autenticación.
+  - Implementa los siguientes métodos clave:
+    - `attemptAuthentication`: Para intentar autenticar al usuario.
+    - `successfulAuthentication`: Llamado cuando la autenticación es exitosa (se generará el JWT aquí).
+    - `unsuccessfulAuthentication`: Llamado cuando la autenticación falla (devuelve un error 403 con un mensaje al cliente).
+
+- **Constructor personalizado**
+  
+  - Añade un atributo `AuthenticationManager` en la clase para delegar la autenticación.
+  
+  - Define un constructor para inyectar el `AuthenticationManager`:
+    
+    ```java
+    private AuthenticationManager authenticationManager;
+    
+    public JwtAuthenticationFilter(AuthenticationManager authenticationManager) {
+        this.authenticationManager = authenticationManager;
+    }
+    ```
+
+- **Implementación de los métodos clave**
+  
+  - **`attemptAuthentication`**:  
+    Este método intentará autenticar al usuario.
+    - Inicialmente, se devuelve una llamada a `authenticationManager.authenticate(null)`. Más adelante, se pasará un token de autenticación válido (como `UsernamePasswordAuthenticationToken`) con los datos enviados en la solicitud.
+  - **`successfulAuthentication`**:  
+    Cuando la autenticación sea exitosa, este método:
+    - Generará un token JWT.
+    - Enviará el token como respuesta al cliente junto con los datos del usuario autenticado.
+  - **`unsuccessfulAuthentication`**:  
+    Este método manejará los errores de autenticación:
+    - Devuelve un código HTTP 403 Forbidden.
+    - Proporciona un mensaje con detalles sobre el error.
 
 ---
 
 ## DTO
 
 Puedes considerar el uso de DTOs (Data Transfer Objects) si necesitas personalizar la información que se devuelve al cliente. Los DTOs pueden omitir algunos atributos de la entidad o formatear la información según sea necesario. Por ejemplo, si solo necesitas devolver el nombre y el correo electrónico del usuario, puedes crear un `UserDTO` con esos campos.
+
+Si se intenta levantar el backend con la dependencia instalada, se tiene segurizado la aplicación.

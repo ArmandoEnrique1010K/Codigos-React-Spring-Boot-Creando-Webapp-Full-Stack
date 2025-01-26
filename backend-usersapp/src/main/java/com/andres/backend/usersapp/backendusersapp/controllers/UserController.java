@@ -77,9 +77,14 @@ public class UserController {
 
     // @RequestBody sirve para definir el objeto JSON que se enviara junto con la
     // petición
+
+    // Se agrega un objeto result de tipo BindingResult al lado del objeto que se
+    // valida con @Valid (User)
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody User user, BindingResult result) {
+        // Verifica si hay errores en la validación
         if (result.hasErrors()) {
+            // Puedes crear una función para manejar los errores
             return validation(result);
         }
 
@@ -91,6 +96,8 @@ public class UserController {
     }
 
     // Actualiza un usuario, petición de tipo PUT
+    // Observa que se utiliza UserRequest, el objeto que se pasa en el cuerpo de la
+    // petición al realizar la solicitud
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@Valid @RequestBody UserRequest user, BindingResult result, @PathVariable Long id) {
         if (result.hasErrors()) {
@@ -130,12 +137,26 @@ public class UserController {
         return ResponseEntity.notFound().build(); // 404
     }
 
+    // Metodo validation para los errores de validacion, se pasa el objeto result
     private ResponseEntity<?> validation(BindingResult result) {
+        // El tipo Map contiene pares de nombre y valor, los nombres no se pueden
+        // repetir
+
+        // Una instancia de HashMap es una clase que implementa la interfaz Map
         Map<String, String> errors = new HashMap<>();
 
+        // getFieldErrors devuelve una lista de los errores que se tienen en los campos
+        // y con el metodo forEach se itera en cada mensaje
         result.getFieldErrors().forEach(err -> {
+            // El metodo put recibe 2 argumentos: una llave (nombre del campo) y su valor
+            // asociado
+            // getField sirve para obtener el nombre del campo y getDefaultMessage el
+            // mensaje de error definido (si no se ha definido, se establece uno por
+            // defecto)
             errors.put(err.getField(), "El campo " + err.getField() + " " + err.getDefaultMessage());
         });
+
+        // Devuelve un status 400 (generado con badRequest)
         return ResponseEntity.badRequest().body(errors);
     }
 }
