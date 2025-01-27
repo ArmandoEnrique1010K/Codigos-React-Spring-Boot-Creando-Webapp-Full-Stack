@@ -67,6 +67,7 @@ public class SpringSecurityConfig {
                 // Añade el filtro JWT con el AuthenticationManager
                 .addFilter(new JwtAuthenticationFilter(authenticationConfiguration.getAuthenticationManager()))
 
+                // Añade el filtro para la validación del token JWT
                 .addFilter(new JwtValidationFilter(authenticationConfiguration.getAuthenticationManager()))
 
                 // Deshabilitar CSRF, ya que no se utiliza en APIs RESTful

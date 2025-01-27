@@ -1244,7 +1244,7 @@ import java.util.Date;
 @Override
 protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
         Authentication authResult) throws IOException, ServletException {
-    
+
     // Obtiene el nombre de usuario del resultado de la autenticación
     String username = ((org.springframework.security.core.userdetails.User) authResult.getPrincipal())
             .getUsername();
@@ -1304,20 +1304,20 @@ protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServle
 
     // Crear un mapa para la respuesta
     Map<String, Object> body = new HashMap<>();
-    
+
     // Mensaje genérico de error
     body.put("message", "Error en la autenticación, usuario o contraseña incorrectos");
-    
+
     // Se puede agregar un error específico solo para los registros, no para el cliente
     // Se comenta esta línea para evitar enviar detalles del error
     // body.put("error", failed.getMessage());
-    
+
     // Escribir el cuerpo de la respuesta como JSON
     response.getWriter().write(new ObjectMapper().writeValueAsString(body));
-    
+
     // Establecer el código de estado como 401 (No autorizado)
     response.setStatus(401);
-    
+
     // Establecer el tipo de contenido de la respuesta como JSON
     response.setContentType("application/json");
 }
@@ -1375,8 +1375,6 @@ public class SpringSecurityConfig {
                 .build();
     }
 }
-
-
 ```
 
 ## El servicio de autenticación
@@ -1415,7 +1413,7 @@ public class JpaUserDetailsService implements UserDetailsService {
 
         // Si el usuario existe (en este caso, "admin"), se crea una lista de autoridades
         List<GrantedAuthority> authorities = new ArrayList<>();
-        
+
         // Se agrega el rol de usuario al conjunto de autoridades
         authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
@@ -1494,7 +1492,6 @@ public class SpringSecurityConfig {
                 .build();
     }
 }
-
 ```
 
 ### 2. Realizar la Prueba en Postman
@@ -1588,7 +1585,6 @@ public class SpringSecurityConfig {
                 .build();
     }
 }
-
 ```
 
 La contraseña de ejemplo está encriptada con `BCrypt` y almacenada como `$2a$10$DOMDxjYyfZ/e7RcBfUpzqeaCs8pLgcizuiQWXPkU35nOhZlFcE9MS`, que corresponde a "12345" después de haber sido encriptada con `BCryptPasswordEncoder`.
@@ -1640,7 +1636,7 @@ Cuando se haga el login, la contraseña ingresada (`12345`) será comparada con 
 
 Para implementar el filtro `JwtValidationFilter`, que se encarga de validar el token JWT en las cabeceras de la solicitud, se siguen varios pasos. Este filtro permite que solo se pueda acceder a recursos protegidos si el token JWT enviado es válido.
 
-### Crear la clase `JwtValidationFilter`
+### 1. Crear la clase `JwtValidationFilter`
 
 Primero, se extiende de `BasicAuthenticationFilter`, que es una clase de Spring Security que proporciona la funcionalidad básica de autenticación. Este filtro se ejecuta en cada solicitud.
 
@@ -1684,7 +1680,6 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
         chain.doFilter(request, response);  // Continúa con el siguiente filtro
     }
 }
-
 ```
 
 ### Explicación del código
@@ -1696,9 +1691,528 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
    - **Validación del Token**: Si el header está presente y es válido, se elimina la palabra "Bearer " del comienzo para extraer solo el token.
    - **Continuación del Filtro**: Se llama a `chain.doFilter(request, response)` para permitir que la solicitud continúe con los siguientes filtros de la cadena.
 
+### Paso 2: Validación del Token (más adelante)
 
+Para continuar con la validación del token, lo que harás es decodificar el token JWT (que generalmente está codificado en Base64) y extraer el `username` y la "clave secreta" que usaste al crear el token. Posteriormente, usarás esa información para validar el token y establecer el contexto de seguridad.
 
+```java
+// Pseudo-código para validar el token:
+try {
+    String decodedToken = new String(Base64.getDecoder().decode(token));
+    String[] tokenParts = decodedToken.split("\\.");
+    String username = tokenParts[1];  // Se obtiene el 'username' del token decodificado
 
+    // Aquí puedes verificar si el token es válido, si el usuario existe en la base de datos,
+    // y si coincide con el 'username' en el token.
+    // Luego, crear el objeto Authentication y establecerlo en el contexto de seguridad.
+} catch (Exception e) {
+    response.setStatus(HttpServletResponse.SC_FORBIDDEN);  // Si el token no es válido, retorna 403 Forbidden
+    return;
+}
+```
+
+### Paso 3: Configurar el filtro en `SpringSecurityConfig`
+
+Ahora, debes registrar este filtro en la configuración de seguridad de Spring. Para hacerlo, modificas el `SpringSecurityConfig` para agregar el `JwtValidationFilter` al filtro de la cadena.
+
+```java
+@Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        .authorizeRequests()
+            .antMatchers(HttpMethod.GET, "/users").permitAll()
+            .anyRequest().authenticated()
+        .and()
+        .addFilter(new JwtValidationFilter(authenticationManager()))  // Agrega el filtro de validación del token
+        .csrf().disable()
+        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);  // No se usa sesión, solo tokens
+    return http.build();
+}
+```
+
+### Paso 4: Detalles sobre el `BCryptPasswordEncoder`
+
+Como mencionaste en la explicación, el `BCryptPasswordEncoder` es un algoritmo de hashing robusto que es utilizado para proteger las contraseñas, generando hashes únicos para cada contraseña, incluso si se repite el valor. Este algoritmo es muy seguro ya que es resistente a ataques de diccionario y de fuerza bruta debido a su naturaleza de alto costo computacional. Al usar `BCrypt`, no puedes "desencriptar" la contraseña, solo compararla usando `passwordEncoder.matches()`.
+
+### Resumen:
+
+- **`JwtValidationFilter`**: Se encarga de interceptar las solicitudes para verificar si contienen un token válido en las cabeceras. Si el token es válido, continúa el proceso de autenticación, si no, devuelve un error `403 Forbidden`.
+- **Validación del Token**: El token se debe decodificar y validar (esto implica comprobar su integridad y que el `username` coincida con el que se encuentra en el contexto de la autenticación).
+- **Configuración de Seguridad**: Asegúrate de agregar el filtro a la cadena de filtros de Spring Security.
+
+## Flujo de validación del token JWT
+
+Se implementa un filtro de validación de tokens JWT que verifica si el token enviado es válido, decodifica la información contenida, y autentica al usuario si la validación es exitosa.
+
+```java
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+
+        // Obtener el encabezado de autorización
+        String header = request.getHeader("Authorization");
+
+        // Si no hay token o no comienza con "Bearer ", continuar con la cadena
+        if (header == null || !header.startsWith("Bearer ")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // Elimina el prefijo "Bearer " y decodifica el token
+        String token = header.replace("Bearer ", "");
+
+        byte[] tokenDecodeBytes = Base64.getDecoder().decode(token);
+
+        String tokenDecode = new String(tokenDecodeBytes);
+
+        // Divide el token en la clave secreta y el nombre de usuario
+        // Escapar el punto en la expresión regular
+        String[] tokenArr = tokenDecode.split(".");
+
+        String secret = tokenArr[0];
+        String username = tokenArr[1];
+
+        // Valida que la clave secreta coincida
+        if ("algun_token_con_alguna_frase_Secreta".equals(secret)) {
+            List<GrantedAuthority> authorities = new ArrayList<>();
+
+            authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+
+            // Autenticar al usuario 
+            // Se omite el password en UsernamePasswordAuthenticationToken
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(username,
+                    authorities);
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            // Continuar con la cadena de filtros
+            chain.doFilter(request, response);
+        } else {
+            // Si hay un problema con el formato del token
+            Map<String, String> body = new HashMap<>();
+            body.put("message", "El token JWT no es valido");
+
+            response.getWriter().write(new ObjectMapper().writeValueAsString(body));
+            response.setStatus(403);
+            response.setContentType("applicaction/json");
+        }
+    }
+```
+
+### Pasos principales
+
+- **Obtener el token**
+  
+  Extraer el token de la cabecera `Authorization` del request, asegurándose de que comienza con `"Bearer "`.
+
+- **Decodificar el token**
+  
+  Usar `Base64.getDecoder().decode()` para obtener un arreglo de bytes y convertirlo a una cadena usando `new String(byteArray)`.
+
+- **Separar los datos**
+  Dividir el token en partes con el método `split(".")`, donde:
+  
+  - Índice `0`: Palabra secreta (e.g., `"algun_token_con_alguna_frase_Secreta"`).
+  - Índice `1`: Nombre de usuario.
+
+- **Validar el token**
+  
+  Comparar la palabra secreta decodificada con la original. Si coinciden:
+  
+  - Crear una lista de roles (en este caso, solo `"ROLE_USER"`).
+  - Autenticar al usuario mediante `UsernamePasswordAuthenticationToken` y configurar el contexto de seguridad con `SecurityContextHolder`.
+
+- **Rechazar el token inválido**
+  
+  Si la validación falla, enviar una respuesta HTTP 403 con un mensaje JSON indicando que el token no es válido.
+
+### Manejo de errores
+
+- Si el token no está presente o no tiene el formato correcto (`Bearer` ), simplemente se continúa con la cadena de filtros.
+- Si el token no coincide con la palabra secreta, se envía un error HTTP 403 con un mensaje de error en formato JSON.
+
+## Configuracion de constantes y filtros para autenticación JWT en Spring Security
+
+### 1. Creación de la clase `TokenJwtConfig`
+
+Se crea una clase para centralizar las constantes relacionadas con el manejo de JWT:
+
+- **`SECRET_KEY`**: Clave secreta para validar los tokens (`"algun_token_con_alguna_frase_Secreta"`).
+- **`PREFIX_TOKEN`**: Prefijo del token (`"Bearer "`).
+- **`HEADER_AUTHORIZATION`**: Nombre de la cabecera HTTP para el token (`"Authorization"`).
+
+```java
+package com.andres.backend.usersapp.backend_usersapp.auth;
+
+public class TokenJwtConfig {
+    public final static String SECRET_KEY = "algun_token_con_alguna_frase_Secreta";
+    public final static String PREFIX_TOKEN = "Bearer ";
+    public final static String HEADER_AUTHORIZATION = "Authorization";
+}
+```
+
+### 2. Actualización de `JwtValidationFilter`
+
+Se modifica el filtro de validación JWT (`JwtValidationFilter`) para utilizar las constantes definidas en `TokenJwtConfig`. Los cambios principales son:
+
+- **Importación estatica de las constantes**
+
+```java
+import static com.andres.backend.usersapp.backend_usersapp.auth.TokenJwtConfig.*;
+```
+
+- **Reemplazo de valores literales**
+  
+  - La cabecera `Authorization` se obtiene utilizando `HEADER_AUTHORIZATION`.
+  
+  - El prefijo `Bearer` se utiliza desde `PREFIX_TOKEN`.
+  
+  - La clave secreta se valida con `SECRET_KEY`.
+
+- **Correcciones en la autenticación**
+  
+  - `UsernamePasswordAuthenticationToken` ahora incluye:
+    
+    - **Username** como principal.
+    - **Password** con valor `null` (ya no es necesario para validación, solo para generación).
+    - **Authorities** para asignar roles (`ROLE_USER`).
+
+- **Manejo de errores mejorado**
+  
+  Respuesta en formato JSON para tokens inválidos.
+
+```java
+// ...
+
+// Utiliza el asterisco para importar las variables estaticas
+import static com.andres.backend.usersapp.backend_usersapp.auth.TokenJwtConfig.*;
+
+public class JwtValidationFilter extends BasicAuthenticationFilter {
+
+    public JwtValidationFilter(AuthenticationManager authenticationManager) {
+        super(authenticationManager);
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+
+        // Utiliza HEADER_AUTHORIZATION
+        String header = request.getHeader(HEADER_AUTHORIZATION);
+
+        // Utiliza PREFIX_TOKEN
+        if (header == null || !header.startsWith(PREFIX_TOKEN)) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // Utiliza PREFIX_TOKEN
+        String token = header.replace(PREFIX_TOKEN, "");
+
+        byte[] tokenDecodeBytes = Base64.getDecoder().decode(token);
+
+        String tokenDecode = new String(tokenDecodeBytes);
+
+        String[] tokenArr = tokenDecode.split(".");
+
+        String secret = tokenArr[0];
+        String username = tokenArr[1];
+
+        // Importa la constante SECRET_KEY de TokenJwtConfig
+        if (SECRET_KEY.equals(secret)) {
+            List<GrantedAuthority> authorities = new ArrayList<>();
+
+            authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+
+            // Añade el password null como argumento
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(username, null,
+                    authorities);
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            chain.doFilter(request, response);
+        } else {
+            Map<String, String> body = new HashMap<>();
+            body.put("message", "El token JWT no es valido");
+
+            response.getWriter().write(new ObjectMapper().writeValueAsString(body));
+            response.setStatus(403);
+            response.setContentType("applicaction/json");
+        }
+    }
+}
+```
+
+### 3. Actualización de `JwtAuthenticationFilter`
+
+Se modifica el filtro de autenticación JWT (`JwtAuthenticationFilter`) para incluir las constantes de `TokenJwtConfig`. Cambios clave:
+
+1. **Uso de constantes**:
+   
+   - Clave secreta (`SECRET_KEY`) y prefijo del token (`PREFIX_TOKEN`) en la generación del token.
+   - Cabecera HTTP (`HEADER_AUTHORIZATION`) al añadir el token en la respuesta.
+
+2. **Lógica de generación del token**:
+   
+   - El token se genera concatenando la clave secreta y el nombre de usuario (`SECRET_KEY + "." + username`) y codificándolo en Base64.
+   - El token generado se incluye en la respuesta como cabecera y en el cuerpo JSON.
+
+3. **Respuesta personalizada**:
+   
+   - En autenticación exitosa, se incluye un mensaje de bienvenida, el token y el nombre de usuario en la respuesta JSON.
+   - En autenticación fallida, se retorna un mensaje de error con detalles del fallo.
+
+```java
+package com.andres.backend.usersapp.backend_usersapp.auth.filters;
+
+// ...
+
+// Importa las constantes de forma estatica
+import static com.andres.backend.usersapp.backend_usersapp.auth.TokenJwtConfig.*;
+
+public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
+
+    private AuthenticationManager authenticationManager;
+
+    public JwtAuthenticationFilter(AuthenticationManager authenticationManager) {
+        this.authenticationManager = authenticationManager;
+    }
+
+    @Override
+    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
+            throws AuthenticationException {
+        User user = null;
+        String username = null;
+        String password = null;
+
+        try {
+            user = new ObjectMapper().readValue(request.getInputStream(), User.class);
+            username = user.getUsername();
+            password = user.getPassword();
+
+            // logger.info("Username desde request InputStream (raw) " + username);
+            // logger.info("Password desde request InputStream (raw) " + password);
+
+        } catch (StreamReadException e) {
+            e.printStackTrace();
+        } catch (DatabindException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, password);
+
+        return authenticationManager.authenticate(authToken);
+    }
+
+    @Override
+    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
+            Authentication authResult) throws IOException, ServletException {
+        String username = ((org.springframework.security.core.userdetails.User) authResult.getPrincipal())
+                .getUsername();
+
+        // Utiliza las constante SECRET_KEY, NO OLVIDAR EL PUNTO
+        String originalInput = SECRET_KEY + "." + username;
+
+        String token = Base64.getEncoder().encodeToString(originalInput.getBytes());
+
+        // Utiliza la constante HEADER_AUTHORIZATION Y PREFIX_TOKEN
+        response.addHeader(HEADER_AUTHORIZATION, PREFIX_TOKEN + token);
+
+        Map<String, Object> body = new HashMap<>();
+
+        body.put("token", token);
+        body.put("message", String.format("Hola %s, has iniciado sesion con exito", username));
+        body.put("username", username);
+
+        response.getWriter().write(new ObjectMapper().writeValueAsString(body));
+        response.setStatus(200);
+        response.setContentType("application/json");
+    }
+
+    @Override
+    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
+            AuthenticationException failed) throws IOException, ServletException {
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("message", "Error en la autenticación username o password incorrecto");
+
+        body.put("error", failed.getMessage());
+
+        response.getWriter().write(new ObjectMapper().writeValueAsString(body));
+        response.setStatus(401);
+        response.setContentType("application/json");
+    }
+
+}
+```
+
+### 4. Agregar el filtro `JwtValidationFilter`
+
+Ve al archivo `SpringSecurityConfig` agrega un filtro para `JwtValidationFilter`, recibe el `authenticationManager`.
+
+```java
+package com.andres.backend.usersapp.backend_usersapp.auth;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+
+import com.andres.backend.usersapp.backend_usersapp.auth.filters.JwtAuthenticationFilter;
+import com.andres.backend.usersapp.backend_usersapp.auth.filters.JwtValidationFilter;
+
+@Configuration
+public class SpringSecurityConfig {
+
+    @Autowired
+    private AuthenticationConfiguration authenticationConfiguration;
+
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    AuthenticationManager authenticationManager() throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    };
+
+    @Bean
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http.authorizeHttpRequests()
+                .requestMatchers(HttpMethod.GET, "/users").permitAll()
+                .anyRequest().authenticated()
+                .and()
+                .addFilter(new JwtAuthenticationFilter(authenticationConfiguration.getAuthenticationManager()))
+                // Filtro para la validación del token
+                .addFilter(new JwtValidationFilter(authenticationConfiguration.getAuthenticationManager()))
+                .csrf(config -> config.disable())
+                .sessionManagement(managment -> managment.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .build();
+    }
+}
+```
+
+## Pruebas y correciones para autenticación con JWT en Spring Security
+
+### 1. Pruebas iniciales en Postman
+
+- **Inicio de sesión (`/login`)**:
+  
+  - Realizado con credenciales válidas:
+    
+    ```json
+    {
+        "username": "admin",
+        "password": "12345"
+    }
+    ```
+  
+  - Resultado: **Éxito**, se genera un token JWT: `YWxndW5fdG9rZW5fY29uX2FsZ3VuYV9mcmFzZV9TZWNyZXRhLmFkbWlu`.
+  
+  <img src="assets/2025-01-26-18-26-26-image.png" title="" alt="" data-align="center">
+  
+  - Este token contiene:
+    
+    - **Clave secreta**: `algun_token_con_alguna_frase_Secreta`.
+    
+    - **Nombre de usuario**: `admin`.
+
+- **Pruebas de acceso**:
+  
+  - **Endpoint público (`GET /users`)**
+    
+    - Accesible sin token.
+  
+  - **Endpoint privado (`GET /users/1`)**
+    
+    - Sin token: retorna **403 Forbidden**.
+    - Con token válido: debe permitir el acceso.
+
+- **Acceso a un endpoint privado**:
+  
+  - Antes de realizar la petición, ve a la pestaña `Auth` y selecciona el tipo de autenticación `Bearer Token`, pega el token generado al iniciar sesión y realiza la petición.
+  
+  <img src="assets/2025-01-26-18-30-32-image.png" title="" alt="" data-align="center">
+  
+  - Puedes ir a la pestaña `Headers`, en el key `Authorization`, puedes ver que contiene el token que se va a pasar al momento de realizar la solicitud.
+    
+    <img src="assets/2025-01-26-18-36-53-image.png" title="" alt="" data-align="center">
+
+### 2. Error detectado: Token no procesado correctamente
+
+- Durante la validación del token en `JwtValidationFilter`, al separar el token decodificado por el carácter punto (`.`), se generó un error:
+  
+  - **`tokenArr.length`**: **0** (el token no se separaba correctamente).
+  - **Causa**: El punto (`.`) es un carácter reservado en expresiones regulares.
+
+- Utiliza lo siguiente para imprimir mensajes en la consola en `JwtValidationFilter`.
+
+```java
+String token = header.replace(PREFIX_TOKEN, "");
+byte[] tokenDecodeBytes = Base64.getDecoder().decode(token);
+String tokenDecode = new String(tokenDecodeBytes);
+String[] tokenArr = tokenDecode.split(".");
+
+// Imprime el valor de tokenArr
+System.out.println(tokenArr);
+
+// Imprime el largo de tokenArr
+System.out.println(tokenArr.length);
+
+// Imprime el token
+System.out.println(token);
+
+// Imprime tokenDecode
+System.out.println(tokenDecode); // algun_token_con_alguna_frase_Secreta.admin
+```
+
+### 3. Solución
+
+- **Separación del token**:
+  
+  - Cambiar el código que separa el token en la clase `JwtValidationFilter`. Esto asegura que el punto se interprete como un carácter literal, no como un patrón de expresión regular
+    
+    ```java
+    // String[] tokenArr = tokenDecode.split(".");
+    String[] tokenArr = tokenDecode.split("\\.");
+    ```
+
+### 4. Resultado tras aplicar la solución
+
+- **Validación del token**:
+  
+  - El token se separa correctamente en sus dos partes:
+    - **Parte 1**: `SECRET_KEY`.
+    - **Parte 2**: `username`.
+
+- **Pruebas funcionales**:
+  
+  - **GET /users/1 con token válido**: acceso permitido.
+  - **GET /users/1 con token inválido o modificado**: retorna **403 Forbidden**.
+  
+  <img src="assets/2025-01-26-19-00-54-image.png" title="" alt="" data-align="center">
+  
+  - **POST /user/1 con token válido y el siguiente JSON**:
+    
+    ```json
+    {
+        "username": "juan",
+        "password": "qwerty",
+        "email": "juan@correo.com"
+    }
+    ```
+  - Crea el nuevo usuario y lo añade a la base de datos, puedes comprobarlo obteniendo todos los usuarios `/users`.
+  
+  <img src="assets/2025-01-26-18-59-42-image.png" title="" alt="" data-align="center">
 
 
 

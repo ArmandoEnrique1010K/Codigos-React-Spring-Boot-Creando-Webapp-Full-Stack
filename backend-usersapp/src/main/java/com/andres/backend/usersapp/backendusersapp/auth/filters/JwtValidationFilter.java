@@ -25,7 +25,11 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+// Importa las variables estaticas definidas en TokenJwtConfig
 import static com.andres.backend.usersapp.backendusersapp.auth.TokenJwtConfig.*;
+
+// Para utilizar las variables estaticas solamente llamalas por su nombre: HEADER_AUTHORIZATION, PREFIX_TOKEN y SECRET_KEY
 
 public class JwtValidationFilter extends BasicAuthenticationFilter {
 
@@ -33,6 +37,7 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
         super(authenticationManager);
     }
 
+    // Metodo para validar el token JWT
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
@@ -40,16 +45,21 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
             FilterChain chain)
             throws IOException, ServletException {
 
+        // Obtiene el header de autorización
         String header = request.getHeader(HEADER_AUTHORIZATION);
 
+        // Si el header es nulo o no comienza con el prefijo del token, continua con la
+        // cadena
         if (header == null || !header.startsWith(PREFIX_TOKEN)) {
             chain.doFilter(request, response);
 
             return;
         }
 
+        // Elimina el prefijo "Bearer " para obtener el token puro
         String token = header.replace(PREFIX_TOKEN, "");
 
+        // Intenta validar el token
         try {
 
             Claims claims = Jwts.parserBuilder()
@@ -75,11 +85,17 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             chain.doFilter(request, response);
         } catch (JwtException e) {
+            // Si el token no es valido, envia un mensaje de error
             Map<String, String> body = new HashMap<>();
+
+            // Recuerda que el mensaje de error se puede personalizar (en este caso se tiene
+            // 2 campos: error y message)
             body.put("error", e.getMessage());
             body.put("message", "El token JWT no es valido!");
 
+            // Escribir el JSON en la respuesta
             response.getWriter().write(new ObjectMapper().writeValueAsString(body));
+            // Status 401 es cuando no se ha autenticado
             response.setStatus(401);
             response.setContentType("application/json");
         }

@@ -24,6 +24,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+// Importa las variables estaticas definidas en TokenJwtConfig
 import static com.andres.backend.usersapp.backendusersapp.auth.TokenJwtConfig.*;
 
 // Esta clase extiende el filtro predeterminado de Spring para la autenticación: UsernamePasswordAuthenticationFilter
