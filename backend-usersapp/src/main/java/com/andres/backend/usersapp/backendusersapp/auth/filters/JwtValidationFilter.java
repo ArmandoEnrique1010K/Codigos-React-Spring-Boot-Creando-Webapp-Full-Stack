@@ -33,6 +33,7 @@ import static com.andres.backend.usersapp.backendusersapp.auth.TokenJwtConfig.*;
 
 public class JwtValidationFilter extends BasicAuthenticationFilter {
 
+    // Constructor de la clase
     public JwtValidationFilter(AuthenticationManager authenticationManager) {
         super(authenticationManager);
     }

@@ -2210,11 +2210,10 @@ System.out.println(tokenDecode); // algun_token_con_alguna_frase_Secreta.admin
         "email": "juan@correo.com"
     }
     ```
+  
   - Crea el nuevo usuario y lo añade a la base de datos, puedes comprobarlo obteniendo todos los usuarios `/users`.
   
   <img src="assets/2025-01-26-18-59-42-image.png" title="" alt="" data-align="center">
-
-
 
 ---
 

@@ -28,21 +28,25 @@ public class JpaUserDetailsService implements UserDetailsService {
     // Metodo para cargar el usuario por su nombre de usuario (metodo por defecto de
     // UserDetailsService)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+
+        // Observa que se utiliza una importacion directa de la entidad, para evitar el
+        // conflicto con la clase User de Spring
         Optional<com.andres.backend.usersapp.backendusersapp.models.entities.User> o = repository
                 .getUserByUsername(username);
 
+        // Si el usuario no existe, lanza una excepción
         if (!o.isPresent()) {
-            // Lanza el error si el usuario no existe
             throw new UsernameNotFoundException(String.format("Username %s no existe en el sistema!", username));
         }
         com.andres.backend.usersapp.backendusersapp.models.entities.User user = o.orElseThrow();
 
+        // Mapea los roles del usuario a una lista de GrantedAuthority
         List<GrantedAuthority> authorities = user.getRoles()
                 .stream()
                 .map(r -> new SimpleGrantedAuthority(r.getName()))
                 .collect(Collectors.toList());
 
-        // Devuelve un nuevo objeto User con las credenciales del usuario ficticio
+        // Devuelve un nuevo objeto User con las credenciales del usuario
         // El primer true indica si el usuario está habilitado, el segundo true es si la
         // cuenta no expira,
         // el tercer true es si las credenciales no expiran y el cuarto true es si no

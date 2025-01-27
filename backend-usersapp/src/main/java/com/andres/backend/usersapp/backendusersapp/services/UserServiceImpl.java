@@ -28,6 +28,7 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private RoleRepository roleRepository;
 
+    // Inyecta el password encoder
     @Autowired
     private PasswordEncoder passwordEncoder;
 
