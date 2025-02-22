@@ -24,6 +24,7 @@ public class JpaUserDetailsService implements UserDetailsService {
     private UserRepository repository;
 
     @Override
+    // No olvidar que este metodo es de tipo lectura
     @Transactional(readOnly = true)
     // Metodo para cargar el usuario por su nombre de usuario (metodo por defecto de
     // UserDetailsService)
@@ -31,6 +32,9 @@ public class JpaUserDetailsService implements UserDetailsService {
 
         // Observa que se utiliza una importacion directa de la entidad, para evitar el
         // conflicto con la clase User de Spring
+
+        // Busca al usuario por su username, se utiliza la consulta definida con @Query
+        // en el repositorio
         Optional<com.andres.backend.usersapp.backendusersapp.models.entities.User> o = repository
                 .getUserByUsername(username);
 
@@ -38,6 +42,8 @@ public class JpaUserDetailsService implements UserDetailsService {
         if (!o.isPresent()) {
             throw new UsernameNotFoundException(String.format("Username %s no existe en el sistema!", username));
         }
+
+        // Almacena el usuario encontrado
         com.andres.backend.usersapp.backendusersapp.models.entities.User user = o.orElseThrow();
 
         // Mapea los roles del usuario a una lista de GrantedAuthority

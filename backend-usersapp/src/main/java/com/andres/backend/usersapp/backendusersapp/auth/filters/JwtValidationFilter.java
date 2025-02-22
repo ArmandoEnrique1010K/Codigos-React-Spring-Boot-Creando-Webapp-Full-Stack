@@ -53,14 +53,13 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
         // cadena
         if (header == null || !header.startsWith(PREFIX_TOKEN)) {
             chain.doFilter(request, response);
-
             return;
         }
 
         // Elimina el prefijo "Bearer " para obtener el token puro
         String token = header.replace(PREFIX_TOKEN, "");
 
-        // Intenta validar el token
+        // Intenta validar el token con un bloque try y catch
         try {
 
             Claims claims = Jwts.parserBuilder()

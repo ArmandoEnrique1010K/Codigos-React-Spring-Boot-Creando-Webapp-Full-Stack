@@ -592,5 +592,3 @@ public class User {
     }
 }
 ```
-
-
