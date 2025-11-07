@@ -1,4 +1,3 @@
-// Modulo para la lista de productos
 export const products = [
   {
     id: 1,
