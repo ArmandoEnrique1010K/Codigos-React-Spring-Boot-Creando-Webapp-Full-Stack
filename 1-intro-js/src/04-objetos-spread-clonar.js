@@ -39,9 +39,15 @@ const invoice = {
   },
 };
 
+// Asigna un objeto a otra variable
 // const invoice2 = invoice;
+
+// Para clonar las propiedades de un objeto usa el operador spread (...)
 const invoice2 = { ...invoice };
 
+// Comparación de objetos con el operador ===, 
+// Compara 2 valores, pero no realiza la conversión de tipos en caso sea necesario
+// Los objetos no son iguales porque apuntan a diferentes direcciones de memoria
 const result = invoice === invoice2;
 
 if (result) {

@@ -39,7 +39,12 @@ const invoice = {
   },
 };
 
+
+// Puedes acceder de forma segura a propiedades de un objeto que podrian no existir con el operador optional chaning (?.)
+// Si la propiedad no existe, retorna undefined
 console.log(invoice.company?.name)
+
+// Puedes acceder a propiedades de objetos anidados de forma segura
 console.log(invoice.client?.address?.street)
 
 if (invoice.company?.name) {

@@ -1,4 +1,4 @@
-
+// El objeto representa una factura con sus respectivos datos
 export const invoice = {
   id: 10,
   name: 'Componentes PC',
@@ -16,6 +16,8 @@ export const invoice = {
     name: 'New Egg',
     fiscalNumber: 1234567,
   },
+
+  // El arreglo de items representa los productos de la factura
   items: [
     {
       id: 1,
