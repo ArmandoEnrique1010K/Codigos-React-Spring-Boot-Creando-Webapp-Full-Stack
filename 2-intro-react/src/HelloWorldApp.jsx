@@ -50,3 +50,11 @@ HelloWorldApp.propTypes = {
   id: PropTypes.number.isRequired,
   user: PropTypes.object.isRequired,
 };
+
+// A partir de React 19, las defaultProps ya no estan disponibles, que venian junto
+// con propTypes, los cuales servian para especificar un valor por defecto para las props,
+// en lugar de definirlos en la funcion del componente
+// HelloWorldApp.defaultProps = {
+//   title: "Hola mundo por defecto!",
+//   book: "UML got a gota",
+// };

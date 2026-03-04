@@ -1,6 +1,8 @@
 import PropTypes from "prop-types";
 
 export const CompanyView = ({ title, company }) => {
+  // En este caso no se aplico desestructuracion
+
   return (
     <>
       <h3>{title}</h3>

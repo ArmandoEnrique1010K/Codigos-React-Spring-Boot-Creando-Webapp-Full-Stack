@@ -5,6 +5,8 @@ export const ListItemsView = ({ title, items, handlerDeleteItem }) => {
   return (
     <>
       <h4>{title}</h4>
+
+      {/* La tabla se encarga de mostrar los items de la factura */}
       <table className="table table-striped table-hover">
         <thead>
           <tr>
@@ -15,6 +17,15 @@ export const ListItemsView = ({ title, items, handlerDeleteItem }) => {
           </tr>
         </thead>
         <tbody>
+          {/* Itera sobre los items de la factura y renderiza un componente RowItemView para cada item */}
+          {/*  
+          - En React, las listas se utilizan para renderizar un conjunto de elementos basados en datos 
+          dinámicos, como un arreglo. 
+          - En este caso, el método 'map' recorre los elementos del arreglo y devuelve un componente o 
+          elemento JSX para cada uno.
+          - Cada elemento en una lista debe tener un atributo 'key' único en el primer componente hijo para 
+          ayudar a React a identificar qué elementos han cambiado, agregado o eliminado.
+          */}
           {items.map(({ id, product, price, quantity }) => (
             <RowItemView
               key={id}

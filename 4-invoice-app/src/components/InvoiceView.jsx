@@ -1,3 +1,4 @@
+// La carpeta 'components' contiene componentes reutilizables de la aplicación
 import PropTypes from "prop-types";
 
 export const InvoiceView = ({ id, name }) => {

@@ -1,5 +1,6 @@
 import PropTypes from "prop-types";
 
+// Representa una fila de la tabla de items
 export const RowItemView = ({
   id,
   product,

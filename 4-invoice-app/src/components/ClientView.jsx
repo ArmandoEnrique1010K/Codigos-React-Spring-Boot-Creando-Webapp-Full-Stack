@@ -1,9 +1,12 @@
 import PropTypes from "prop-types";
 
 export const ClientView = ({ title, client }) => {
+  // La propiedad 'client' es un objeto que contiene la información del cliente, puedes desestructurarla
   const {
+    // Puedes renombrar las propiedades de un objeto, en este caso el nombre del cliente
     name: nameClient,
     lastName,
+    // Puedes desestructurar objetos anidados
     address: { country, city, street, number },
   } = client;
 
@@ -25,6 +28,7 @@ export const ClientView = ({ title, client }) => {
   );
 };
 
+// Recuerda instalar PropTypes para utilizarlo
 ClientView.propTypes = {
   title: PropTypes.string.isRequired,
   client: PropTypes.object.isRequired,

@@ -1,3 +1,5 @@
+// La carpeta 'data' contiene datos estáticos que no cambian dinámicamente
+
 // El objeto representa una factura con sus respectivos datos
 export const invoice = {
   id: 10,

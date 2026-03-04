@@ -4,17 +4,95 @@
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+  <!-- Enlace de la hoja de estilos de Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>4-invoice-app</title>
+  <title>04-Aplicación factura</title>
 </head>
 
 <body>
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
+
+  <!-- Enlace del archivo JavaScript de Bootstrap -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+    crossorigin="anonymous"></script>
 </body>
+
+<!-- Bootstrap 5 -->
+<!--
+Bootstrap es un framework que facilita el diseño adaptable para diferentes dispositivos, ofrece instrucciones
+para usar en CSS3 y JavaScript.
+-->
+
+<!-- Uso del CDN de Boostrap -->
+<!--
+1. Ve a la página oficial de Bootstrap (https://getbootstrap.com/) y selecciona la sección "Download".
+2. Busca el apartado "CDN via jsDelivr" y copia el enlace de la etiqueta `<link>` correspondiente al archivo `bootstrap.min.css`.
+3. Abre tu archivo `index.html` y pega el enlace dentro de las etiquetas `<head></head>`.
+4. Realiza el mismo procedimiento con el archivo `bootstrap.min.js`.
+5. Al incluir el CDN, los estilos predefinidos de Bootstrap estarán disponibles para todos los componentes en tu aplicación.
+-->
+
+<!-- Tips y Atajos Útiles en Visual Studio Code (VSCode) -->
+<!--
+1. Multicursor (Escribir en Múltiples Líneas Simultáneamente): Pulsa la tecla ALT y haz clic en diferentes puntos del código.
+2. Abreviaturas de Emmet: Escribe abreviaturas como `div.text-end.bg-success` y presiona Enter para generar automáticamente un 
+elemento HTML con clases aplicadas: `<div class="text-end bg-success"></div>`
+3. Buscar y Reemplazar Rápido: Pulsa CTRL + H para abrir la herramienta de búsqueda y reemplazo para renombrar variables, 
+funciones, etc; en todo el proyecto
+4. Edición Más Precisa con Atajos Adicionales:
+4.1. CTRL + D: Selecciona la siguiente ocurrencia del texto seleccionado.
+4.2. CTRL + SHIFT + L: Selecciona todas las ocurrencias del texto seleccionado.
+4.3. ALT + SHIFT + Flechas: Duplica o mueve líneas rápidamente.
+-->
+
+<!-- Estilos de Bootstrap en React-->
+<!-- En React, se utiliza la propiedad 'className' en lugar de 'class' para aplicar estilos de Bootstrap.
+1. Clases de tipo contenedor
+1.1 container: Crea un contenedor centrado con márgenes automáticos.
+1.2 row: Crea una fila para el sistema de cuadrícula.
+1.3 col: Divide las filas en columnas.
+
+2. Clases de tipo lista
+2.1 list-group: Estiliza listas no ordenadas como un grupo de elementos.
+2.2 list-group-item: Aplica estilo a cada elemento de la lista.
+
+3. Clases de tipo tabla
+3.1 table: Estiliza tablas HTML básicas.
+3.2 table-striped: Añade rayas alternadas a las filas de una tabla.
+3.3 table-hover: Resalta las filas al pasar el cursor sobre ellas.
+
+4. Clases de tipo card
+4.1 card: Crea un contenedor con bordes redondeados y sombra.
+4.2 card-header: Estilo para el encabezado del card.
+4.3 card-body: Contenido principal del card.
+4.4 card-title: Titulo del card.
+4.5 card-text: Texto dentro del cuerpo del card.
+
+5. Clases de márgenes y anchos
+5.1 m-3: Aplica un margen de 3 unidades en todos los lados.
+5.2 my-3: Aplica un margen vertical (arriba y abajo) de 3 unidades.
+5.3 w-50: Define un ancho del 50%.
+
+6. Clases de texto y badges
+6.1 Text-start: Alinea el texto hacia la izquierda.
+6.2 text-end: Alinea el texto hacia la derecha.
+6.3 badge bg-success: Aplica estilo de badge (etiqueta) con un fondo verde.
+6.4 fw-bold: Texto en negrita
+
+7. Formularios y botones
+7.1 form-control: Aplica estilo a campos de entrada de tipo `text` de formularios.
+7.2 btn btn-primary: Estiliza un botón con el tema principal (color azul).
+7.3 btn btn-secondary: Estiliza un botón con un tema secundario (color gris).
+7.4 btn btn-danger: Estiliza un botón con un color rojo (acción destructiva).
+7.5 btn btn-success: Estiliza un botón con un color verde (acción realizada).
+
+Existen varias clases de Bootstrap que se pueden combinar para crear estilos personalizados.
+Documentación de Bootstrap: https://getbootstrap.com/docs/5.3/getting-started/introduction/
+ -->
 
 </html>
